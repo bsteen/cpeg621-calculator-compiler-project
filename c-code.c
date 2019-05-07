@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "calc.h"		// To get calc compiler global constants/defines
 #include "c-code.h"
@@ -61,7 +62,7 @@ void track_user_var(char *var, int assigned)
 }
 
 // Take the TAC and generate a valid C program code
-void gen_c_code(char * input, char * output, int num_temp_vars)
+void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
 {
 	// Open files for reading TAC and writing C code
 	FILE * tac_file = fopen(input, "r");
@@ -78,7 +79,12 @@ void gen_c_code(char * input, char * output, int num_temp_vars)
 		exit(1);
 	}
 
-	int i;
+	
+	if(timing)
+	{
+		fprintf(c_code_file, "#include <time.h>\n");
+	}
+	
 	fprintf(c_code_file, "#include <stdio.h>\n#include <math.h>\n\nint main() {\n");
 
 	// Declare all user variables and initialize them to 0
@@ -86,6 +92,8 @@ void gen_c_code(char * input, char * output, int num_temp_vars)
 	{
 		fprintf(c_code_file, "\tint ");
 	}
+	
+	int i;
 	for(i = 0; i < num_user_vars; i++)
 	{
 		if (i != num_user_vars - 1)
@@ -122,6 +130,13 @@ void gen_c_code(char * input, char * output, int num_temp_vars)
 	{
 		fprintf(c_code_file, "\tprintf(\"%s=\");\n", user_vars_wo_def[i]);
 		fprintf(c_code_file, "\tscanf(\"%%d\", &%s);\n\n", user_vars_wo_def[i]);
+	}
+	
+	if(timing)
+	{
+		fprintf(c_code_file, "\tstruct timespec _begin_time, _end_time;\n\tdouble _elapsed_time;\n");
+		fprintf(c_code_file, "\tclock_gettime(CLOCK_MONOTONIC, &_begin_time);\n");
+		fprintf(c_code_file, "\tint _iter;\n\n\tfor(_iter = 0; _iter < %d; _iter++){\n", NUM_ITERS);
 	}
 
 	// Read in TAC file, write to c file with line labels
@@ -176,7 +191,15 @@ void gen_c_code(char * input, char * output, int num_temp_vars)
 
 		i++;	// Increment line number
 	}
-
+	
+	if(timing)
+	{
+		fprintf(c_code_file, "\t}\n\n\tclock_gettime(CLOCK_MONOTONIC, &_end_time);\n");
+		fprintf(c_code_file, "\t_elapsed_time = _end_time.tv_sec - _begin_time.tv_sec;\n");
+		fprintf(c_code_file, "\t_elapsed_time += (_end_time.tv_nsec - _begin_time.tv_nsec) / 1000000000.0;\n");
+		fprintf(c_code_file, "\tprintf(\"Total time (seconds): %%f\\n\", _elapsed_time);\n");
+	}
+	
 	fprintf(c_code_file, "\n");
 
 	// Print out user variable final values

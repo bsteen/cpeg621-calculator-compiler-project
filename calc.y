@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "basic-block.h"
 #include "calc.h"
 #include "c-code.h"
 
@@ -31,7 +30,6 @@ int temp_var_ctr = 0;				// Number of temp vars in use
 int flex_line_num = 1;		// Used for debugging
 FILE * yyin;				// Input calc program file pointer
 FILE * tac_file;			// Three address code file pointer
-FILE * c_code_file;			// C code produced by backend file pointer
 %}
 
 %define parse.error verbose		// Enable verbose errors
@@ -133,7 +131,7 @@ void gen_tac_assign(char * var, char * expr)
 	sprintf(tac_buf, "%s = %s;\n", var, expr);
 
 	fprintf(tac_file, tac_buf);
-	bb_print_tac(tac_buf);
+	// bb_print_tac(tac_buf);
 
 	gen_tac_else(var);
 
@@ -164,7 +162,7 @@ char* gen_tac_expr(char * one, char * op, char * three)
 		fprintf(tac_file, tac_buf);
 	}
 
-	bb_print_tac(tac_buf);
+	// bb_print_tac(tac_buf);
 
 	return strdup(tmp_var_name);
 }
@@ -196,7 +194,7 @@ void gen_tac_if(char * cond_expr)
 	sprintf(buf, "if(%s) {\n", cond_expr);
 
 	fprintf(tac_file, buf);
-	bb_print_if_else_block_end(buf, inside_if2);
+	// bb_print_if_else_block_end(buf, inside_if2);
 
 	return;
 }
@@ -230,7 +228,7 @@ void gen_tac_else(char *expr)
 			inside_if1 = 0;
 		}
 
-		bb_print_else_block(expr, !inside_if1);
+		// bb_print_else_block(expr, !inside_if1);
 	}
 
 	return;
@@ -269,10 +267,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	char * bb_file_name = "Output/tac-basic-block.txt";
-	char * ssa_file_name = "Output/tac-ssa.txt";
-	bb_init_files(bb_file_name, ssa_file_name);
-
 	init_c_code();	// Initialize counters for var tracking (tracking results only used in C code gen)
 
 	// Read in the input program and parse the tokens, writes out frontend TAC to file
@@ -283,11 +277,13 @@ int main(int argc, char *argv[])
 	// Close the files from initial TAC generation
 	fclose(yyin);
 	fclose(tac_file);
-	bb_close_files(bb_file_name, ssa_file_name);
 
-	// Generate runnable C code from frontend TAC and basic block code
-	gen_c_code(frontend_tac_name, "Output/c-frontend.c", temp_var_ctr);
-	gen_c_code(bb_file_name, "Output/c-basic-block.c", temp_var_ctr);
+	// Generate runnable C code for unoptimized and and optimized, with and
+	// without timing
+	gen_c_code(frontend_tac_name, "Output/backend.c", temp_var_ctr, 0);
+	gen_c_code(frontend_tac_name, "Output/backend-timing.c", temp_var_ctr, 1);
+	// gen_c_code(, "Output/backend-opt.c", temp_var_ctr, 0);
+	// gen_c_code(, "Output/backend-opt-timing.c", temp_var_ctr, 1);
 
 	return 0;
 }
