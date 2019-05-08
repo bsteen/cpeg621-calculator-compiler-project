@@ -62,6 +62,7 @@ void track_user_var(char *var, int assigned)
 }
 
 // Take the TAC and generate a valid C program code
+// This module is the compiler "backend"
 void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
 {
 	// Open files for reading TAC and writing C code
@@ -134,9 +135,9 @@ void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
 	
 	if(timing)
 	{
-		fprintf(c_code_file, "\tstruct timespec _begin_time, _end_time;\n\tdouble _elapsed_time;\n");
-		fprintf(c_code_file, "\tclock_gettime(CLOCK_MONOTONIC, &_begin_time);\n");
-		fprintf(c_code_file, "\tint _iter;\n\n\tfor(_iter = 0; _iter < %d; _iter++){\n", NUM_ITERS);
+		fprintf(c_code_file, "\tstruct timespec _begin_time, _end_time;\n\tdouble _elapsed_time;\n\tint _iter;\n");
+		fprintf(c_code_file, "\tclock_gettime(CLOCK_MONOTONIC, &_begin_time);\n\n");
+		fprintf(c_code_file, "\tfor(_iter = 0; _iter < %d; _iter++){\n", NUM_ITERS);
 	}
 
 	// Read in TAC file, write to c file with line labels

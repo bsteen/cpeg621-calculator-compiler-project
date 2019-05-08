@@ -270,8 +270,6 @@ int main(int argc, char *argv[])
 	init_c_code();	// Initialize counters for var tracking (tracking results only used in C code gen)
 
 	// Read in the input program and parse the tokens, writes out frontend TAC to file
-	// and writes out basic block form of TAC
-	// At the same time, SSA form is also generated from the basic block form
 	yyparse();
 
 	// Close the files from initial TAC generation
