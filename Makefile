@@ -2,15 +2,19 @@
 # CPEG 621 Project - Calculator Compiler
 
 # TO DO:
-# What are common subexpr and copy-statement
-#	Do they needed full data dependency graph?
-# Data dependency
-#	Implement
+# Get if if if to work
+# Order of nested fi/else make sense from input program?
+# Data dependence
+#	Implement a simple model for staighline
+#	Add calls in calc.y
+# 	Test
+#	Add for if/else
 # 	Test
 # Optimizations
-#	Implement common subexpr
+#	Implement global common subexpr
 #		make heuristic
-#	Implement copy-statement
+#	Implement global copy-statement
+#		only on a=b;
 #		make heuristic
 #	Determine fix point
 #		when both have an equal number of changes for 3 times in a row?
@@ -23,10 +27,10 @@
 # All output files from the middle end are placed in `Output/`
 
 # Generate calculator compiler with ....
-calc: calc.l calc.y calc.h c-code.c c-code.h
+calc: calc.l calc.y calc.h c-code.c c-code.h data-dep.c data-dep.h
 	bison -d calc.y
 	flex calc.l
-	gcc -O3 -Wall lex.yy.c calc.tab.c c-code.c -o calc
+	gcc -O3 -Wall lex.yy.c calc.tab.c c-code.c data-dep.c -o calc
 
 # Create calc.output for debugging
 bison-dbg:
