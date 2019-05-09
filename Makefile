@@ -5,8 +5,6 @@
 # Get if if if to work
 # Order of nested fi/else make sense from input program?
 # Data dependence
-#	Implement a simple model for straight line
-#	Combine write back in _dd_check_for_dependecies?
 # 	Test
 #	Add for if/else
 # 	Test
