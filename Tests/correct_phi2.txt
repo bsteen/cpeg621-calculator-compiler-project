@@ -1,0 +1,6 @@
+d=(1)?((2)?(y=5))
+c=(5)?(a=y=2)
+outc=c
+outd=d
+outa=a
+outy=y

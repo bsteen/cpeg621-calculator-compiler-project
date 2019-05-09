@@ -1,0 +1,56 @@
+This file gives some details on which variables to pay attention to (especially
+for phi insertion) in a given test file after it is sent through the compiler
+middle end. I tried to make sure phis were inserted only when necessary and with
+the fewest amount of arguments necessary.
+
+To run one of these tests, do: ./calc Tests/<file_name>
+Then look at Output/tac-ssa.txt for the compiler middle end output in SSA form
+with basic blocks.
+
+This list doesn't explain all the files or test cases I created, but overall
+every file in the Tests/ folder should test a specific border case, feature, or
+mixture of several cases for the compiler middle end with basic block and SSA
+form output.
+
+********************************************************************************
+class_example.txt
+	Provided example from assignment sheet (single 1-deep if else)
+
+correct_phi3.txt
+	Chained by phi writes
+
+correct_phi5.txt
+	y assigned in nested if only and then read after nest
+	x assigned in nested if/else and read after nest
+	x assigned in outer if after nest and outer else, read outside
+
+correct_phi6.txt
+	x assigned a value inside an inner if and assigned in both outer if/else
+	y assigned in both nested if/else and then read after nest and outside
+
+correct_phi7.txt
+	Case where assigned value before nested if and only in inner if => only need
+	outer if arg and nested if args as phi args (var x)
+
+correct_phi8.txt
+	z defined prior to if else then defined in both inner if and else,
+	then read from outside, then written to at end of outer if
+	also written to in outer else and then read outside
+	(phi correctly only needed last outer if and outer else value, ignores
+	all others)
+
+correct_phi9.txt
+	x written in both inner if else, not read until fully outside
+
+correct_phi10.txt
+	x written in inner if read right after then read outside
+
+correct_phi11.txt
+	x written in inner if and then read outside entire if/else
+	y written in both inner if/else, written in outer if then read outside
+	entire if/else
+
+ifelse2.txt
+	y being reading inside nested if when it was already defined in outer if
+	and in previous if/else
+********************************************************************************

@@ -95,13 +95,9 @@ void _dd_append_to_depend_array(int index, int to_append, int type)
 // (if needed) and the dependence of the current line
 void _dd_check_for_dependecies(char *var, int written)
 {
-	int prev_num_flow_deps = stmt_dep_array[num_stmts].num_flow_deps;
-	int prev_num_anti_deps = stmt_dep_array[num_stmts].num_anti_deps;
-	int prev_num_write_deps = stmt_dep_array[num_stmts].num_write_deps;
-
 	// Find the most recent dependencies
 	int i;
-	for(i = 0; i < num_stmts; i++)
+	for(i = num_stmts - 1; i >= 0 ; i--)
 	{
 		// If var was written to this TAC line
 		if(written)
@@ -110,14 +106,15 @@ void _dd_check_for_dependecies(char *var, int written)
 			if(strcmp(var, stmt_dep_array[i].written) == 0)
 			{
 				// If found outside of if/else statement
-				stmt_dep_array[num_stmts].num_write_deps = prev_num_write_deps;	// Clear previously found dependencies
 				_dd_append_to_depend_array(num_stmts, i, WRITE);
+				_dd_append_to_depend_array(i, num_stmts, WRITE);
+				break;
 			}
 			else if(strcmp(var, stmt_dep_array[i].read1) == 0
 				 || strcmp(var, stmt_dep_array[i].read2) == 0)
 			{	// Anti-dependence (write after read)
-				stmt_dep_array[num_stmts].num_anti_deps = prev_num_anti_deps; // Clear previously found dependencies
 				_dd_append_to_depend_array(num_stmts, i, ANTI);
+				_dd_append_to_depend_array(i, num_stmts, ANTI);
 			}
 		}
 		else
@@ -127,41 +124,19 @@ void _dd_check_for_dependecies(char *var, int written)
 			if(strcmp(var, stmt_dep_array[i].written) == 0)
 			{
 				// If found outside of if/else statement
-				stmt_dep_array[num_stmts].num_flow_deps = prev_num_flow_deps; // Clear previously found dependencies
 				_dd_append_to_depend_array(num_stmts, i, FLOW);
+				_dd_append_to_depend_array(i, num_stmts, FLOW);
+				break;
 			}
 		}
-	}
-
-	// Since dependencies for current statement are finalized, can now back 
-	// annotate the dependencies with the previous statements that were found
-	// Back annotate write dependencies
-	for(i = prev_num_write_deps; i < stmt_dep_array[num_stmts].num_write_deps; i++)
-	{
-		int prev_stmt = stmt_dep_array[num_stmts].write_deps[i];
-		_dd_append_to_depend_array(prev_stmt, num_stmts, WRITE);
-	}
-	
-	// Back annotate anti dependencies
-	for(i = prev_num_anti_deps; i < stmt_dep_array[num_stmts].num_anti_deps; i++)
-	{
-		int prev_stmt = stmt_dep_array[num_stmts].anti_deps[i];
-		_dd_append_to_depend_array(prev_stmt, num_stmts, ANTI);
-	}
-	
-	// Back annotate flow dependencies
-	for(i = prev_num_flow_deps; i < stmt_dep_array[num_stmts].num_flow_deps; i++)
-	{
-		int prev_stmt = stmt_dep_array[num_stmts].flow_deps[i];
-		_dd_append_to_depend_array(prev_stmt, num_stmts, FLOW);
 	}
 
 	return;
 }
 
-// Called by calc.y everytime a new TAC line is proccessed
-// Recorded all variable names and call functions to check for dependence with
-// previous lines
+// Called by calc.y every time a new TAC line is generated
+// Recorded all variable names that appeared in the TAC line then call a 
+// functions to check for dependence with the previous lines
 void dd_record_and_process(char *written, char *read1, char *read2)
 {
 	if(num_stmts >= MAX_NUM_STATEMENTS)
@@ -174,7 +149,7 @@ void dd_record_and_process(char *written, char *read1, char *read2)
 	stmt_dep_array[num_stmts].num_anti_deps = 0;
 	stmt_dep_array[num_stmts].num_write_deps = 0;
 
-	if(written != NULL)
+	if(written != NULL)		// Value written to will always be a variable
 	{
 		strcpy(stmt_dep_array[num_stmts].written, written);
 		_dd_check_for_dependecies(written, 1);
@@ -199,6 +174,7 @@ void dd_record_and_process(char *written, char *read1, char *read2)
 	if(read2 != NULL && read2[0] >= 'A')
 	{
 		strcpy(stmt_dep_array[num_stmts].read2, read2);
+		_dd_check_for_dependecies(read2, 0);
 	}
 	else
 	{
@@ -216,8 +192,7 @@ void dd_print_out_dependencies()
 	int i;
 	for(i = 0; i < num_stmts; i++)
 	{
-
-		printf("S%d:\nFlow Dependence: ", i);
+		printf("S%d:\nFlow-Dependence: ", i);
 		if (stmt_dep_array[i].num_flow_deps == 0){
 			printf("None");
 		}
@@ -255,6 +230,8 @@ void dd_print_out_dependencies()
 				printf("S%d ", stmt_dep_array[i].write_deps[j]);
 			}
 		}
+		
+		printf("\n");
 	}
 
 	return;
