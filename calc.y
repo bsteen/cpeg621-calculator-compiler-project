@@ -86,7 +86,7 @@ expr :
 						{
 							$$ = $7;
 							do_gen_else++;	// Keep track of how many closing elses are need for
-							printf("do_gen_else incremented by \"%s\": %d\n", $7, do_gen_else);
+							// printf("do_gen_else incremented by \"%s\": %d\n", $7, do_gen_else);
 							my_free($2);	// nested if/else cases
 						}
 	;
@@ -128,11 +128,8 @@ void gen_tac_assign(char *var, char *expr)
 {
 	track_user_var(var, 1);
 
-	char tac_buf[MAX_USR_VAR_NAME_LEN * 4];
-	sprintf(tac_buf, "%s = %s;\n", var, expr);
-
-	fprintf(tac_file, tac_buf);
-	printf("WROTE OUT: %s", tac_buf);
+	fprintf(tac_file, "%s = %s;\n", var, expr);
+	// printf("WROTE OUT: %s", tac_buf);
 	
 	dd_record_and_process(var, expr, NULL);
 
@@ -146,7 +143,6 @@ void gen_tac_assign(char *var, char *expr)
 char* gen_tac_expr(char *one, char *op, char *three)
 {
 	char tmp_var_name[16]; 	// temp var names: _t0123456789
-	char tac_buf[MAX_USR_VAR_NAME_LEN * 4];
 
 	// Create the temp variable name
 	sprintf(tmp_var_name, "_t%d", temp_var_ctr);
@@ -155,14 +151,12 @@ char* gen_tac_expr(char *one, char *op, char *three)
 	if (one != NULL)
 	{
 		// Write out three address code
-		sprintf(tac_buf, "%s = %s %s %s;\n", tmp_var_name, one, op, three);
-		fprintf(tac_file, tac_buf);
+		fprintf(tac_file, "%s = %s %s %s;\n", tmp_var_name, one, op, three);
 		dd_record_and_process(tmp_var_name, one, three);
 	}
 	else	// Unary operator case
 	{
-		sprintf(tac_buf, "%s = %s%s;\n", tmp_var_name, op, three);
-		fprintf(tac_file, tac_buf);
+		fprintf(tac_file, "%s = %s%s;\n", tmp_var_name, op, three);
 		dd_record_and_process(tmp_var_name, NULL, three);
 	}
 
@@ -202,17 +196,17 @@ void gen_tac_if(char *cond_expr)
 // the else part will be empty (when expr is NULL)
 void gen_tac_else(char *expr)
 {
-	printf("do_gen_else=%d, if_depth=%d\n", do_gen_else, if_depth);
+	// printf("do_gen_else=%d, if_depth=%d\n", do_gen_else, if_depth);
 	
 	for (; do_gen_else > 0; do_gen_else--)
 	{
 		inside_if = 0;
-		printf("Leaving IF, entering ELSE at depth=%d\n", if_depth);
+		// printf("Leaving IF, entering ELSE at depth=%d\n", if_depth);
 		
 		if(expr != NULL)
 		{
 			fprintf(tac_file, "} else {\n%s = 0;\n}\n", expr);
-			printf("WROTE OUT: %s = 0;\n", expr);
+			// printf("WROTE OUT: %s = 0;\n", expr);
 			dd_record_and_process(expr, NULL, NULL);
 		}
 		else
@@ -220,19 +214,19 @@ void gen_tac_else(char *expr)
 			fprintf(tac_file, "} else {\n}\n");
 		}
 		
-		printf("Left ELSE at depth=%d\n", if_depth);
+		// printf("Left ELSE at depth=%d\n", if_depth);
 		if_depth--;
 		
 		if(if_depth > 0)
 		{
 			inside_if = 1;
-			printf("Back in IF at depth=%d\n", if_depth);
+			// printf("Back in IF at depth=%d\n", if_depth);
 		}
 		else
 		{
 			// Reached end of if/else nest, next loop with exit before starting
 			inside_if = 0;
-			printf("Outside all IF/ELSE (depth=%d)\n\n", if_depth);
+			// printf("Outside all IF/ELSE (depth=%d)\n\n", if_depth);
 		}
 	}
 
@@ -282,7 +276,7 @@ int main(int argc, char *argv[])
 	fclose(tac_file);
 
 	
-	// dd_print_out_dependencies();	// Print out the recorded data dependencies
+	dd_print_out_dependencies();	// Print out the recorded data dependencies
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing

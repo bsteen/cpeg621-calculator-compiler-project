@@ -3,9 +3,9 @@
 
 # TO DO:
 # Get if if if to work
-# Order of nested fi/else make sense from input program?
+# Order of nested if/else make sense from input program?
 # Data dependence
-# 	Test
+# 	Test 
 #	Add for if/else
 # 	Test
 # Optimizations

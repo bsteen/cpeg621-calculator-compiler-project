@@ -107,14 +107,13 @@ void _dd_check_for_dependecies(char *var, int written)
 			{
 				// If found outside of if/else statement
 				_dd_append_to_depend_array(num_stmts, i, WRITE);
-				_dd_append_to_depend_array(i, num_stmts, WRITE);
 				break;
 			}
-			else if(strcmp(var, stmt_dep_array[i].read1) == 0
-				 || strcmp(var, stmt_dep_array[i].read2) == 0)
-			{	// Anti-dependence (write after read)
+			else if(strcmp(var, stmt_dep_array[i].read1) == 0	
+				 || strcmp(var, stmt_dep_array[i].read2) == 0)	// Anti-dependence (write after read)
+			{	
+				// If found outside of if/else statement
 				_dd_append_to_depend_array(num_stmts, i, ANTI);
-				_dd_append_to_depend_array(i, num_stmts, ANTI);
 			}
 		}
 		else
@@ -125,7 +124,6 @@ void _dd_check_for_dependecies(char *var, int written)
 			{
 				// If found outside of if/else statement
 				_dd_append_to_depend_array(num_stmts, i, FLOW);
-				_dd_append_to_depend_array(i, num_stmts, FLOW);
 				break;
 			}
 		}
