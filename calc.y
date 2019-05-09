@@ -86,7 +86,7 @@ expr :
 						{
 							$$ = $7;
 							do_gen_else++;	// Keep track of how many closing elses are need for
-							// printf("do_gen_else incremented by \"%s\": %d\n", $7, do_gen_else);
+							printf("do_gen_else incremented by \"%s\": %d\n", $7, do_gen_else);
 							my_free($2);	// nested if/else cases
 						}
 	;
@@ -132,7 +132,7 @@ void gen_tac_assign(char *var, char *expr)
 	sprintf(tac_buf, "%s = %s;\n", var, expr);
 
 	fprintf(tac_file, tac_buf);
-	// printf("WROTE OUT: %s", tac_buf);
+	printf("WROTE OUT: %s", tac_buf);
 	
 	dd_record_and_process(var, expr, NULL);
 
@@ -202,17 +202,17 @@ void gen_tac_if(char *cond_expr)
 // the else part will be empty (when expr is NULL)
 void gen_tac_else(char *expr)
 {
-	// printf("do_gen_else=%d, if_depth=%d\n", do_gen_else, if_depth);
+	printf("do_gen_else=%d, if_depth=%d\n", do_gen_else, if_depth);
 	
 	for (; do_gen_else > 0; do_gen_else--)
 	{
 		inside_if = 0;
-		// printf("Leaving IF, entering ELSE at depth=%d\n", if_depth);
+		printf("Leaving IF, entering ELSE at depth=%d\n", if_depth);
 		
 		if(expr != NULL)
 		{
 			fprintf(tac_file, "} else {\n%s = 0;\n}\n", expr);
-			// printf("WROTE OUT: %s = 0;\n", expr);
+			printf("WROTE OUT: %s = 0;\n", expr);
 			dd_record_and_process(expr, NULL, NULL);
 		}
 		else
@@ -220,19 +220,19 @@ void gen_tac_else(char *expr)
 			fprintf(tac_file, "} else {\n}\n");
 		}
 		
-		// printf("Left ELSE at depth=%d\n", if_depth);
+		printf("Left ELSE at depth=%d\n", if_depth);
 		if_depth--;
 		
 		if(if_depth > 0)
 		{
 			inside_if = 1;
-			// printf("Back in IF at depth=%d\n", if_depth);
+			printf("Back in IF at depth=%d\n", if_depth);
 		}
 		else
 		{
 			// Reached end of if/else nest, next loop with exit before starting
 			inside_if = 0;
-			// printf("Outside all IF/ELSE (depth=%d)\n\n", if_depth);
+			printf("Outside all IF/ELSE (depth=%d)\n\n", if_depth);
 		}
 	}
 
@@ -274,15 +274,15 @@ int main(int argc, char *argv[])
 
 	init_c_code();	// Initialize counters for var tracking (tracking results only used in C code gen)
 
-	// Read in the input program and parse the tokens, writes out frontend TAC to file
-	yyparse();
+	
+	yyparse();	// Read in the input program and parse the tokens, writes out frontend TAC to file
 
 	// Close the files from initial TAC generation
 	fclose(yyin);
 	fclose(tac_file);
 
-	// Print out the recorded data dependencies
-	dd_print_out_dependencies();
+	
+	// dd_print_out_dependencies();	// Print out the recorded data dependencies
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing
