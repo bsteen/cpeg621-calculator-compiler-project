@@ -26,11 +26,17 @@ typedef struct Statement_struct
 
 	int write_deps[MAX_NUM_DEPENDS];
 	int num_write_deps;
+	
+	int ifelse_id;
+	int dd_ifelse_depth;
+	int dd_inside_if;	// If not in if then in else OR outside of next
 } Statement;
 
 // Each index in the array corresponds to the statement in the TAC
 Statement stmt_dep_array[MAX_NUM_STATEMENTS];
 int num_stmts = 0;	// Number of statements in the TAC
+
+int if_else_id_counter = 0;
 
 // Given an index to stmt_dep_array, add to_append to the end of the specific
 // dependency array specified by the type
@@ -132,10 +138,19 @@ void _dd_check_for_dependecies(char *var, int written)
 	return;
 }
 
+// Called by calc.y when if/else nest is left
+// Create ID for next if/else statement
+void dd_left_ifelse_nest()
+{
+	if_else_id_counter++;
+	
+	return;
+}
+
 // Called by calc.y every time a new TAC line is generated
 // Recorded all variable names that appeared in the TAC line then call a 
 // functions to check for dependence with the previous lines
-void dd_record_and_process(char *written, char *read1, char *read2)
+void dd_record_and_process(char *written, char *read1, char *read2, int dd_ifelse_depth, int dd_inside_if)
 {
 	if(num_stmts >= MAX_NUM_STATEMENTS)
 	{
@@ -146,6 +161,8 @@ void dd_record_and_process(char *written, char *read1, char *read2)
 	stmt_dep_array[num_stmts].num_flow_deps = 0;
 	stmt_dep_array[num_stmts].num_anti_deps = 0;
 	stmt_dep_array[num_stmts].num_write_deps = 0;
+	stmt_dep_array[num_stmts].dd_ifelse_depth = dd_ifelse_depth;
+	stmt_dep_array[num_stmts].dd_inside_if = dd_inside_if;
 
 	if(written != NULL)		// Value written to will always be a variable
 	{

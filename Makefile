@@ -2,12 +2,12 @@
 # CPEG 621 Project - Calculator Compiler
 
 # TO DO:
-# Get if if if to work
-# Order of nested if/else make sense from input program?
 # Data dependence
-# 	Test 
 #	Add for if/else
 # 	Test
+# Get if if if to work
+#	Test
+#	Test with dependency
 # Optimizations
 #	Implement global common subexpr
 #		make heuristic

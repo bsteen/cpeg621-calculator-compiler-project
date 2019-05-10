@@ -23,7 +23,7 @@ void gen_tac_else(char *expr);
 void yyerror(const char *);
 
 int do_gen_else = 0;				// When set do the else part of the if/else statement
-int if_depth = 0;					// Amount of nested if-statements (only finite amount allowed)
+int ifelse_depth = 0;					// Amount of nested if-statements (only finite amount allowed)
 int inside_if = 0;					// Is TAC currently inside an if-statement at the given level
 int temp_var_ctr = 0;				// Number of temp vars in use
 
@@ -131,7 +131,7 @@ void gen_tac_assign(char *var, char *expr)
 	fprintf(tac_file, "%s = %s;\n", var, expr);
 	// printf("WROTE OUT: %s", tac_buf);
 	
-	dd_record_and_process(var, expr, NULL);
+	dd_record_and_process(var, expr, NULL, ifelse_depth, inside_if);
 
 	gen_tac_else(var);
 
@@ -152,12 +152,12 @@ char* gen_tac_expr(char *one, char *op, char *three)
 	{
 		// Write out three address code
 		fprintf(tac_file, "%s = %s %s %s;\n", tmp_var_name, one, op, three);
-		dd_record_and_process(tmp_var_name, one, three);
+		dd_record_and_process(tmp_var_name, one, three, ifelse_depth, inside_if);
 	}
 	else	// Unary operator case
 	{
 		fprintf(tac_file, "%s = %s%s;\n", tmp_var_name, op, three);
-		dd_record_and_process(tmp_var_name, NULL, three);
+		dd_record_and_process(tmp_var_name, NULL, three, ifelse_depth, inside_if);
 	}
 
 	return strdup(tmp_var_name);
@@ -171,17 +171,17 @@ void gen_tac_if(char *cond_expr)
 	sprintf(buf, "if(%s) {\n", cond_expr);
 	fprintf(tac_file, buf);
 	
-	dd_record_and_process(NULL, cond_expr, NULL);
+	dd_record_and_process(NULL, cond_expr, NULL, ifelse_depth, inside_if);
 	
 	// Increase if-statement depth after TAC written out
-	if_depth++;
+	ifelse_depth++;
 	inside_if = 1;
-	// printf("Inside IF at depth=%d\n", if_depth);
+	// printf("Inside IF at depth=%d\n", ifelse_depth);
 	
-	if(if_depth > MAX_IF_DEPTH)
+	if(ifelse_depth > MAX_IFELSE_DEPTH)
 	{
 		char err_buf[128];
-		sprintf(err_buf, "Max depth of if-statements exceeded (MAX=%d)", MAX_IF_DEPTH);
+		sprintf(err_buf, "Max depth of if-statements exceeded (MAX=%d)", MAX_IFELSE_DEPTH);
 		yyerror(err_buf);
 
 		exit(1);
@@ -196,37 +196,38 @@ void gen_tac_if(char *cond_expr)
 // the else part will be empty (when expr is NULL)
 void gen_tac_else(char *expr)
 {
-	// printf("do_gen_else=%d, if_depth=%d\n", do_gen_else, if_depth);
+	// printf("do_gen_else=%d, ifelse_depth=%d\n", do_gen_else, ifelse_depth);
 	
 	for (; do_gen_else > 0; do_gen_else--)
 	{
 		inside_if = 0;
-		// printf("Leaving IF, entering ELSE at depth=%d\n", if_depth);
+		// printf("Leaving IF, entering ELSE at depth=%d\n", ifelse_depth);
 		
 		if(expr != NULL)
 		{
 			fprintf(tac_file, "} else {\n%s = 0;\n}\n", expr);
 			// printf("WROTE OUT: %s = 0;\n", expr);
-			dd_record_and_process(expr, NULL, NULL);
+			dd_record_and_process(expr, NULL, NULL, ifelse_depth, inside_if);
 		}
 		else
 		{
 			fprintf(tac_file, "} else {\n}\n");
 		}
 		
-		// printf("Left ELSE at depth=%d\n", if_depth);
-		if_depth--;
+		// printf("Left ELSE at depth=%d\n", ifelse_depth);
+		ifelse_depth--;
 		
-		if(if_depth > 0)
+		if(ifelse_depth > 0)
 		{
 			inside_if = 1;
-			// printf("Back in IF at depth=%d\n", if_depth);
+			// printf("Back in IF at depth=%d\n", ifelse_depth);
 		}
 		else
 		{
 			// Reached end of if/else nest, next loop with exit before starting
 			inside_if = 0;
-			// printf("Outside all IF/ELSE (depth=%d)\n\n", if_depth);
+			// printf("Outside all IF/ELSE (depth=%d)\n\n", ifelse_depth);
+			dd_left_ifelse_nest();
 		}
 	}
 
