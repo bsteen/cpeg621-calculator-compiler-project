@@ -3,8 +3,8 @@
 
 # TO DO:
 # Data dependence
-#	Add for if/else
-# 	Test
+# 	Test if/else dep
+#	Remove index arg from _dd_append_to_depend_array
 # Get if if if to work
 #	Test
 #	Test with dependency
