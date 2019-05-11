@@ -1,16 +1,6 @@
 # Benjamin Steenkamer
 # CPEG 621 Project - Calculator Compiler
 
-# TO DO:
-# Find what doesn't work for triple if
-# Data dependence
-# 	Clean up _dd_verify_ifelse_dependence for-loop structure
-# 	Test if/else dep
-#		outside looking into if/else
-#		inside looking outside
-#		inside looking inside same nest
-#		inside looking inside other nest
-#	Remove index arg from _dd_append_to_depend_array
 # Optimizations
 #	Implement global common subexpr
 #		make heuristic

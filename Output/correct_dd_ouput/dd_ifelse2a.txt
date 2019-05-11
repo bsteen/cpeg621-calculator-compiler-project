@@ -1,0 +1,53 @@
+Printing dependencies:
+S0:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: None
+S1:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: None
+S2:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: None
+S3:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: S1 
+S4:
+Flow-Dependence: S3 
+Anti-dependence: None
+Write-dependence: None
+S5:
+Flow-Dependence: None
+Anti-dependence: S4 
+Write-dependence: S3 
+S6:
+Flow-Dependence: S5 
+Anti-dependence: None
+Write-dependence: S0 
+S7:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: S0 
+S8:
+Flow-Dependence: S7 S6 
+Anti-dependence: S6 S4 
+Write-dependence: S5 S3 
+S9:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: S1 
+S10:
+Flow-Dependence: None
+Anti-dependence: None
+Write-dependence: S9 S8 
+S11:
+Flow-Dependence: S7 S6 S0 
+Anti-dependence: None
+Write-dependence: None
+S12:
+Flow-Dependence: S7 S6 S0 
+Anti-dependence: S11 S8 
+Write-dependence: S7 S6 S0 

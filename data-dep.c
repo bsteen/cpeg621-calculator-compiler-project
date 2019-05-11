@@ -7,8 +7,8 @@
 #include "calc.h"
 #include "data-dep.h"
 
-#define MAX_NUM_STATEMENTS	256
-#define MAX_NUM_DEPENDS		256
+#define MAX_NUM_STATEMENTS	350
+#define MAX_NUM_DEPENDS		128
 
 typedef struct Statement_struct
 {
@@ -27,7 +27,7 @@ typedef struct Statement_struct
 	int write_deps[MAX_NUM_DEPENDS];
 	int num_write_deps;
 
-	int ifelse_id;
+	int dd_ifelse_id;
 	int dd_ifelse_depth;
 	int dd_inside_if;	// If not in if then in else OR outside of next
 } Statement;
@@ -93,6 +93,8 @@ void _dd_append_to_depend_array(int index, int to_append, int type)
 			printf("ERROR Unknown case for _dd_append_to_depend_array\n");
 	}
 
+	// printf("ADDED S%d to S%d for type %d\n", to_append, index, type);
+
 	return;
 }
 
@@ -110,19 +112,20 @@ void _dd_append_to_depend_array(int index, int to_append, int type)
 // Returns 1 if dependence will block all previous dependencies
 int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 {
-	printf("%s in S%d looking back at S%d\n", var_name, num_stmts, statement_num);
+	// printf("%s in S%d looking back at S%d\n", var_name, num_stmts, statement_num);
 
 	int if_checker_in_else = (stmt_dep_array[num_stmts].dd_ifelse_depth != 0) && !stmt_dep_array[num_stmts].dd_inside_if;
 	int other_is_equal_or_deeper = stmt_dep_array[statement_num].dd_ifelse_depth >= stmt_dep_array[num_stmts].dd_ifelse_depth;
+	int in_same_nest = stmt_dep_array[statement_num].dd_ifelse_id == stmt_dep_array[num_stmts].dd_ifelse_id;
 
-	if(if_checker_in_else && other_is_equal_or_deeper)
+	if(in_same_nest && if_checker_in_else && other_is_equal_or_deeper)
 	{
-		printf("%s in S%d (ELSE) and S%d (equal or deeper down) not dependent => in different paths\n", var_name, num_stmts, statement_num);
+		// printf("%s in S%d (ELSE) and S%d (equal or deeper down) not dependent => in different paths\n", var_name, num_stmts, statement_num);
 		return 0;
 	}
 
 	int assigned_in_matching_ifelse = 0;
-	int matching_else_statement = -1;
+	// int matching_else_statement = -1;
 
 	// Start after statement_num (statement with the potential dep.) and look forward
 	// all the way up to just before the current statement that initiated the dependence check
@@ -131,36 +134,36 @@ int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 	{
 		// Determine attributes for the next statement
 		int is_assigned_later = strcmp(stmt_dep_array[i].written, var_name) == 0;
-		int is_in_same_ifelse = stmt_dep_array[i].ifelse_id == stmt_dep_array[statement_num].ifelse_id;
+		in_same_nest = stmt_dep_array[i].dd_ifelse_id == stmt_dep_array[statement_num].dd_ifelse_id;
 		int has_less_eq_depth = stmt_dep_array[i].dd_ifelse_depth <= stmt_dep_array[statement_num].dd_ifelse_depth;
 		int is_in_else = (stmt_dep_array[i].dd_ifelse_depth != 0) && !stmt_dep_array[i].dd_inside_if;
 
 		// Check for assignments that are guaranteed to block
-		if(is_assigned_later && is_in_same_ifelse && has_less_eq_depth)
+		if(is_assigned_later && in_same_nest && has_less_eq_depth)
 		{
 			int on_same_level = stmt_dep_array[i].dd_ifelse_depth == stmt_dep_array[statement_num].dd_ifelse_depth;
 			
 			if(is_in_else && on_same_level)
 			{
 				assigned_in_matching_ifelse = 1;
-				matching_else_statement = i;
+				// matching_else_statement = i;
 			}
 			
 			if(is_in_else)
 			{
 				// If future assignment is in an else-statement, it won't interfere
 				// with this dependency
-				printf("%s in S%d won't block be blocked by future assignment in S%d (else)\n", var_name, statement_num, i);
+				// printf("%s in S%d won't block be blocked by future assignment in S%d (else)\n", var_name, statement_num, i);
 				continue;
 			}
 			else
 			{
-				printf("Future assignment in S%d blocks %s in S%d\n", i, var_name, statement_num);
+				// printf("Future assignment in S%d blocks %s in S%d\n", i, var_name, statement_num);
 				return 0;
 			}
 		}
 
-		if(is_assigned_later && is_in_else)
+		if(is_assigned_later && in_same_nest && is_in_else)
 		{
 			int is_one_deeper = (stmt_dep_array[i].dd_ifelse_depth - 1) == stmt_dep_array[statement_num].dd_ifelse_depth;
 
@@ -169,17 +172,16 @@ int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 				// If the future assignment is in an else-statement one nest deeper,
 				// then it will ALSO have an assignment in the matching if and they will
 				// block this dependency
-				printf("Future assignments in S%d and S%d inside else and the matching if will block %s in S%d\n", i, i-1, var_name, statement_num);
+				// printf("Future assignments in S%d and S%d inside else and the matching if will block %s in S%d\n", i, i-1, var_name, statement_num);
 				return 0;
 			}
 		}
 	}
 
 	_dd_append_to_depend_array(num_stmts, statement_num, type);
-	printf("ADDED S%d to S%d for %d\n", statement_num, num_stmts, type);
 
-	int is_in_same_ifelse = stmt_dep_array[num_stmts].ifelse_id == stmt_dep_array[statement_num].ifelse_id;
-	if((type == FLOW || type == WRITE) && is_in_same_ifelse)
+	in_same_nest = stmt_dep_array[statement_num].dd_ifelse_id == stmt_dep_array[num_stmts].dd_ifelse_id;
+	if((type == FLOW || type == WRITE) && in_same_nest)
 	{
 		// If flow or write dep was found inside if/else nest AND CHECKER IS ALSO IN
 		// THE SAME NEST, this dependence can block the checker from all previous deps
@@ -188,12 +190,12 @@ int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 		if(dependency_is_le_depth)
 		{
 			// If dependency is at higher depth it will block checker statement in lower depth
-			printf("For %s, S%d blocks prev. dep. for S%d\n", var_name, statement_num, num_stmts);
+			// printf("For %s, S%d blocks prev. dep. for S%d\n", var_name, statement_num, num_stmts);
 			return 1;
 		}
 		else if(assigned_in_matching_ifelse)
 		{
-			printf("%s in S%d (IF) and %d (ELSE) blocks prev. dep. for S%d\n", var_name, statement_num, matching_else_statement, num_stmts);
+			// printf("%s in S%d (IF) and %d (ELSE) blocks prev. dep. for S%d\n", var_name, statement_num, matching_else_statement, num_stmts);
 			return 1;
 		}
 	}
@@ -225,14 +227,22 @@ void _dd_check_for_dependecies(char *var_name, int written)
 				}
 				else if(stmt_dep_array[i].dd_ifelse_depth == 1 && !stmt_dep_array[i].dd_inside_if)
 				{
-					// Case where previous assignment done in outer else (and therefore outer if also)
-					// will block all previous dependencies, so we can exit loop
-					_dd_append_to_depend_array(num_stmts, i - 1, WRITE);
 					_dd_append_to_depend_array(num_stmts, i, WRITE);
-					break;
+					
+					int same_var = strcmp(var_name, stmt_dep_array[i - 1].written) == 0;
+					int same_depth = stmt_dep_array[i - 1].dd_ifelse_depth == 1;
+					int same_nest =  stmt_dep_array[i].dd_ifelse_id == stmt_dep_array[i - 1].dd_ifelse_id;
+					
+					if(same_var && same_depth && same_nest)
+					{
+						// Case where previous assignment done in outer else end of outer if
+						// will block all previous dependencies, so we can exit loop
+						_dd_append_to_depend_array(num_stmts, i - 1, WRITE);
+						break;
+					}
 				}
 				else
-				{	// Case where previous write found in outer/inner if or inner else
+				{
 					int blocking = _dd_verify_ifelse_dependence(var_name, i, WRITE);
 					if(blocking)
 					{
@@ -270,11 +280,19 @@ void _dd_check_for_dependecies(char *var_name, int written)
 				}
 				else if(stmt_dep_array[i].dd_ifelse_depth == 1 && !stmt_dep_array[i].dd_inside_if)
 				{
-					// Case where previous assignment done in outer else (and therefore also outer if)
-					// will block all previous dependencies, so we can exit loop
-					_dd_append_to_depend_array(num_stmts, i - 1, FLOW);
 					_dd_append_to_depend_array(num_stmts, i, FLOW);
-					break;
+					
+					int same_var = strcmp(var_name, stmt_dep_array[i - 1].written) == 0;
+					int same_depth = stmt_dep_array[i - 1].dd_ifelse_depth == 1;
+					int same_nest =  stmt_dep_array[i].dd_ifelse_id == stmt_dep_array[i - 1].dd_ifelse_id;
+					
+					if(same_var && same_depth && same_nest)
+					{
+						// Case where previous assignment done in outer else end of outer if
+						// will block all previous dependencies, so we can exit loop
+						_dd_append_to_depend_array(num_stmts, i - 1, FLOW);
+						break;
+					}
 				}
 				else
 				{
@@ -287,7 +305,7 @@ void _dd_check_for_dependecies(char *var_name, int written)
 			}
 		}
 	}
-	printf("\n");
+	// printf("\n");
 
 	return;
 }
@@ -320,11 +338,11 @@ void dd_record_and_process(char *written, char *read1, char *read2, int dd_ifels
 
 	if(dd_ifelse_depth > 0)
 	{
-		stmt_dep_array[num_stmts].ifelse_id = if_else_id_counter;
+		stmt_dep_array[num_stmts].dd_ifelse_id = if_else_id_counter;
 	}
 	else // Outside if/else statement
 	{
-		stmt_dep_array[num_stmts].ifelse_id = -1;
+		stmt_dep_array[num_stmts].dd_ifelse_id = -1;
 		stmt_dep_array[num_stmts].dd_inside_if = -1;	// Since it is outside an if/else, it is neither in an if (1) nor else (0)
 	}
 
@@ -368,6 +386,7 @@ void dd_record_and_process(char *written, char *read1, char *read2, int dd_ifels
 // Print out the dependencies of each statement
 void dd_print_out_dependencies()
 {
+	printf("Printing dependencies:\n");
 	int i;
 	for(i = 0; i < num_stmts; i++)
 	{
