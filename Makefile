@@ -4,6 +4,7 @@
 # TO DO:
 # Find what doesn't work for triple if
 # Data dependence
+# 	Clean up _dd_verify_ifelse_dependence for-loop structure
 # 	Test if/else dep
 #		outside looking into if/else
 #		inside looking outside
