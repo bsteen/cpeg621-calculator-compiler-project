@@ -105,9 +105,17 @@ void _dd_append_to_depend_array(int index, int to_append, int type)
 // Otherwise, it appends statement_num to the appropriate dependency array for the current statement
 void _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 {
-
-	printf("%s sn=%d, num_stmts=%d\n", var_name, statement_num, num_stmts);
-
+	printf("%s in S%d looking back at S%d\n", var_name, num_stmts, statement_num);
+	
+	int if_checker_in_else = !stmt_dep_array[num_stmts].dd_inside_if;
+	int other_is_equal_or_deeper = stmt_dep_array[statement_num].dd_ifelse_depth >= stmt_dep_array[num_stmts].dd_ifelse_depth;
+	
+	if(if_checker_in_else && other_is_equal_or_deeper)
+	{
+		printf("For %s, S%d (in an else) and S%d (equal or deeper down) not dependent => in different paths\n", var_name, num_stmts, statement_num);
+		return;
+	}
+	
 	// Start after statement_num (statement with the potential dep.) and look forward
 	// all the way up to just before the current statement that initiated the dependence check
 	int i;
@@ -157,15 +165,14 @@ void _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 	
 	// Statement checking for dependences is in else, it will have an assignment right before
 	// these two assignments won't have dependence between each other
-	int same_if_statement = stmt_dep_array[statement_num].ifelse_id == stmt_dep_array[num_stmts].ifelse_id;
-	int checker_in_else = !stmt_dep_array[num_stmts].dd_inside_if;
-	int other_in_if = stmt_dep_array[statement_num].dd_inside_if;
+	// int same_if_nest = stmt_dep_array[statement_num].ifelse_id == stmt_dep_array[num_stmts].ifelse_id;
+	// int both_not_in_ifs = !(stmt_dep_array[statement_num].dd_inside_if && stmt_dep_array[num_stmts].dd_inside_if);
 	
-	if(same_if_statement && back_to_back && checker_in_else && other_in_if)
-	{
-		printf("For %s, S%d and S%d not dependent because in different paths\n", var_name, statement_num, num_stmts);
-		return;
-	}
+	// if(back_to_back && same_if_nest && both_not_in_ifs)
+	// {
+		// printf("For %s, S%d and S%d not dependent because in different paths\n", var_name, statement_num, num_stmts);
+		// return;
+	// }
 	
 	_dd_append_to_depend_array(num_stmts, statement_num, type);
 

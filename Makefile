@@ -2,12 +2,14 @@
 # CPEG 621 Project - Calculator Compiler
 
 # TO DO:
+# Find what doesn't work for triple if
 # Data dependence
 # 	Test if/else dep
+#		outside looking into if/else
+#		inside looking outside
+#		inside looking inside same nest
+#		inside looking inside other nest
 #	Remove index arg from _dd_append_to_depend_array
-# Get if if if to work
-#	Test
-#	Test with dependency
 # Optimizations
 #	Implement global common subexpr
 #		make heuristic
@@ -17,6 +19,10 @@
 #	Determine fix point
 #		when both have an equal number of changes for 3 times in a row?
 # 			what if weird oscillating pattern?
+# Get 3 deep to work
+#	Test
+#	Test with dependency
+# 	Test with optimizations
 
 # To create the compiler middle end, type `make`
 # The binary `calc` will be created in the main folder
