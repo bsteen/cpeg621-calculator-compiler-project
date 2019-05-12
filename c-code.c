@@ -86,7 +86,7 @@ void _add_to_temp_arr(int var_name)
 	temp_vars_used[num_temp_vars] = var_name;
 	num_temp_vars++;
 	
-	printf("Recorded _t%d\n", var_name);
+	// printf("Recorded _t%d\n", var_name);
 	
 	return;
 }

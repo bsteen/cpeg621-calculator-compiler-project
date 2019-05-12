@@ -22,10 +22,10 @@
 # All output files from the middle end are placed in `Output/`
 
 # Generate calculator compiler with ....
-calc: calc.l calc.y calc.h c-code.c c-code.h data-dep.c data-dep.h
+calc: calc.l calc.y calc.h c-code.c c-code.h data-dep.c data-dep.h cse.c cse.h
 	bison -d calc.y
 	flex calc.l
-	gcc -O3 -Wall lex.yy.c calc.tab.c c-code.c data-dep.c -o calc
+	gcc -O3 -Wall lex.yy.c calc.tab.c c-code.c data-dep.c cse.c -o calc
 
 # Create calc.output for debugging
 bison-dbg:

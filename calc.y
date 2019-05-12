@@ -240,6 +240,36 @@ void yyerror(const char *s)
 	printf("%s\n", s);
 }
 
+// Copy contents of source file into destination file
+void copy_to_file(char *dest_name, char *source_name)
+{
+	FILE *source_ptr = fopen(source_name, "r");
+	FILE *dest_ptr = fopen(dest_name, "w");
+	
+	if(source_ptr == NULL)
+	{
+		printf("Couldn't open %s for copying to %s\n", source_name, dest_name);
+		exit(1);
+	}
+	
+	if(dest_ptr == NULL)
+	{
+		printf("Couldn't create %s\n", dest_name);
+		exit(1);
+	}
+	
+	char line[MAX_USR_VAR_NAME_LEN * 4];
+	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, source_ptr) != NULL)
+	{
+		fprintf(dest_ptr, "%s", line);
+	}
+	
+	fclose(source_ptr);
+	fclose(dest_ptr);
+	
+	return;
+}
+
 int main(int argc, char *argv[])
 {
 	// Open the input program file
@@ -278,20 +308,26 @@ int main(int argc, char *argv[])
 
 	dd_print_out_dependencies();	// Print out data dependencies based on the internal TAC
 	
-	// Do the intial copy of the front end TAC to the file for optimizations
+	// Setup for optimization process
+	// Do the initial copy of the front end TAC to the file for optimizations
 	char *opt_tac_name = "Output/tac-opt.txt";
-	copy_to_file(frontend_tac_name, opt_tac_name);
+	copy_to_file(opt_tac_name, frontend_tac_name);
 	
-	// char *opt_temp_name = "Output/tac-opt-temp.txt";
-	// do cse in opt_temp_name
-	// copy temp back to opt_tac_name
+	char *temp_tac_name = "Output/tac-opt-temp.txt";
+	
+	// Start the optimization loop
+	// while()
+	// {
+		cse_do_optimization(opt_tac_name, temp_tac_name);
+		// copy_stmnt_do_optimization(opt_temp_name, opt_temp_name);
+	// }
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing
 	gen_c_code(frontend_tac_name, "Output/backend.c", 0);
 	gen_c_code(frontend_tac_name, "Output/backend-timing.c", 1);
-	// gen_c_code(, "Output/backend-opt.c", 0);
-	// gen_c_code(, "Output/backend-opt-timing.c", 1);
+	// gen_c_code(opt_tac_name, "Output/backend-opt.c", 0);
+	// gen_c_code(opt_tac_name, "Output/backend-opt-timing.c", 1);
 
 	return 0;
 }

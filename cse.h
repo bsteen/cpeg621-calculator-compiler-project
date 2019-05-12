@@ -1,1 +1,1 @@
-void copy_to_file(char *source_name, char *dest_name);
+void cse_do_optimization(char *opt_tac_name, char *temp_tac_name);
