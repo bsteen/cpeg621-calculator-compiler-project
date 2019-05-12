@@ -1,3 +1,6 @@
+// Benjamin Steenkamer
+// CPEG 621 Project - Calculator Compiler
+
 #define FLOW 	0
 #define ANTI 	1
 #define WRITE	2 

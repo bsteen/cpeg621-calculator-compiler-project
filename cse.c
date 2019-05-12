@@ -8,7 +8,7 @@
 #include "cse.h"
 
 int cse_next_temp_var_name;
-FILE *temp_tac_ptr;
+FILE *cse_temp_tac_ptr;
 
 // Go through the input file and find the last assigned temporary variable.
 // (will have the largest value in the form _t####); when doing CSE, can the 
@@ -63,8 +63,8 @@ void _cse_init_first_temp_var_name(char *input_file)
 // write optimizations to tac-optimized template
 void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 {
-	temp_tac_ptr = fopen(temp_tac_name, "w"); // Clear contents of temp file for next opt iteration
-	if (temp_tac_ptr == NULL)
+	cse_temp_tac_ptr = fopen(temp_tac_name, "w"); // Clear contents of temp file for next opt iteration
+	if (cse_temp_tac_ptr == NULL)
 	{
 		printf("CSE couldn't open %s for writing next optimization to\n", temp_tac_name);
 		exit(1);
@@ -74,7 +74,7 @@ void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	
 	
 	
-	fclose(temp_tac_ptr);
+	fclose(cse_temp_tac_ptr);
 	
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
