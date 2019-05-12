@@ -14,10 +14,14 @@ int num_user_vars_wo_def;		// Number of user variables that didn't have declarat
 char user_vars[MAX_NUM_VARS][MAX_USR_VAR_NAME_LEN + 1];			// List of all unique user vars in proper
 char user_vars_wo_def[MAX_NUM_VARS][MAX_USR_VAR_NAME_LEN + 1];	// List of user vars used w/o definition
 
+int temp_vars_used[MAX_NUM_TEMP_VARS];
+int num_temp_vars;
+
 void init_c_code()
 {
 	num_user_vars = 0;
 	num_user_vars_wo_def = 0;
+	num_temp_vars = 0;
 	
 	return;
 }
@@ -61,10 +65,74 @@ void track_user_var(char *var, int assigned)
 	return;
 }
 
+void _add_to_temp_arr(int var_name)
+{
+	if(num_temp_vars >= MAX_NUM_TEMP_VARS)
+	{
+		printf("Too many temporary variables used in the program (MAX=%d)\n", MAX_NUM_TEMP_VARS);
+		exit(1);
+	}
+	
+	int i;
+	for(i = 0; i < num_temp_vars; i++)
+	{
+		if(temp_vars_used[i] == var_name)
+		{
+			// Temp var already recorded
+			return;
+		}
+	}
+	
+	temp_vars_used[num_temp_vars] = var_name;
+	num_temp_vars++;
+	
+	printf("Recorded _t%d\n", var_name);
+	
+	return;
+}
+
+void _find_temp_vars(char *input)
+{
+	FILE * tac_file = fopen(input, "r");
+	if (tac_file == NULL)
+	{
+		printf("Couldn't open TAC file in C code generation step\n");
+		exit(1);
+	}
+	
+	char line[MAX_USR_VAR_NAME_LEN * 4];
+	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, tac_file) != NULL)
+	{
+		if(strstr(line, "}") != NULL)
+		{
+			continue;
+		}
+		
+		char *tok = strtok(line, " +-*/!=();\n");
+		
+		while(tok != NULL)
+		{
+			if(tok[0] == '_')
+			{
+				int temp_name = atoi(tok+2);
+				_add_to_temp_arr(temp_name);
+			}
+			
+			tok = strtok(NULL, " +-*/!=();\n");
+		}
+	}
+	
+	fclose(tac_file);
+	
+	return;
+}
+
 // Take the TAC and generate a valid C program code
 // This module is the compiler "backend"
-void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
+void gen_c_code(char *input, char *output, int timing)
 {
+	_find_temp_vars(input);
+	
 	// Open files for reading TAC and writing C code
 	FILE * tac_file = fopen(input, "r");
 	FILE * c_code_file = fopen(output, "w");
@@ -112,15 +180,16 @@ void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
 	{
 		fprintf(c_code_file, "\tint ");
 	}
+	
 	for(i = 0; i < num_temp_vars; i++)
 	{
 		if(i < num_temp_vars - 1)
 		{
-			fprintf(c_code_file, "_t%d = 0, ", i);
+			fprintf(c_code_file, "_t%d = 0, ", temp_vars_used[i]);
 		}
 		else
 		{
-			fprintf(c_code_file, "_t%d = 0;\n", i);
+			fprintf(c_code_file, "_t%d = 0;\n", temp_vars_used[i]);
 		}
 	}
 
@@ -198,7 +267,7 @@ void gen_c_code(char *input, char *output, int num_temp_vars, int timing)
 		fprintf(c_code_file, "\t}\n\n\tclock_gettime(CLOCK_MONOTONIC, &_end_time);\n");
 		fprintf(c_code_file, "\t_elapsed_time = _end_time.tv_sec - _begin_time.tv_sec;\n");
 		fprintf(c_code_file, "\t_elapsed_time += (_end_time.tv_nsec - _begin_time.tv_nsec) / 1000000000.0;\n");
-		fprintf(c_code_file, "\tprintf(\"Total time (seconds): %%f\\n\", _elapsed_time);\n");
+		fprintf(c_code_file, "\tprintf(\"Total time (seconds) w/ %d iterations: %%f\\n\", _elapsed_time);\n", NUM_ITERS);
 	}
 	
 	fprintf(c_code_file, "\n");

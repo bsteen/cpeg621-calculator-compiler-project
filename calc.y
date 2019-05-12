@@ -9,6 +9,7 @@
 
 #include "calc.h"
 #include "c-code.h"
+#include "cse.h"
 #include "data-dep.h"
 
 int yylex(void);					// Will be generated in lex.yy.c by flex
@@ -258,7 +259,7 @@ int main(int argc, char *argv[])
 	}
 
 	// Open the output file where the three address codes will be written
-	char * frontend_tac_name = "Output/tac-frontend.txt";
+	char *frontend_tac_name = "Output/tac-frontend.txt";
 	tac_file = fopen(frontend_tac_name, "w");
 
 	if (tac_file == NULL)
@@ -269,22 +270,28 @@ int main(int argc, char *argv[])
 
 	init_c_code();	// Initialize counters for var tracking (tracking results only used in C code gen)
 
-	
 	yyparse();	// Read in the input program and parse the tokens, writes out frontend TAC to file
 
 	// Close the files from initial TAC generation
 	fclose(yyin);
 	fclose(tac_file);
 
+	dd_print_out_dependencies();	// Print out data dependencies based on the internal TAC
 	
-	dd_print_out_dependencies();	// Print out the recorded data dependencies
+	// Do the intial copy of the front end TAC to the file for optimizations
+	char *opt_tac_name = "Output/tac-opt.txt";
+	copy_to_file(frontend_tac_name, opt_tac_name);
+	
+	// char *opt_temp_name = "Output/tac-opt-temp.txt";
+	// do cse in opt_temp_name
+	// copy temp back to opt_tac_name
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing
-	gen_c_code(frontend_tac_name, "Output/backend.c", temp_var_ctr, 0);
-	gen_c_code(frontend_tac_name, "Output/backend-timing.c", temp_var_ctr, 1);
-	// gen_c_code(, "Output/backend-opt.c", temp_var_ctr, 0);
-	// gen_c_code(, "Output/backend-opt-timing.c", temp_var_ctr, 1);
+	gen_c_code(frontend_tac_name, "Output/backend.c", 0);
+	gen_c_code(frontend_tac_name, "Output/backend-timing.c", 1);
+	// gen_c_code(, "Output/backend-opt.c", 0);
+	// gen_c_code(, "Output/backend-opt-timing.c", 1);
 
 	return 0;
 }
