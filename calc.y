@@ -306,7 +306,7 @@ int main(int argc, char *argv[])
 	fclose(yyin);
 	fclose(tac_file);
 
-	dd_print_out_dependencies();	// Print out data dependencies based on the internal TAC
+	// dd_print_out_dependencies();	// Print out data dependencies based on the internal TAC
 	
 	// Setup for optimization process
 	// Do the initial copy of the front end TAC to the file for optimizations

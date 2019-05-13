@@ -3,6 +3,10 @@
 
 # Optimizations
 #	Implement global common subexpr
+#		Test CSE recording
+# 		invalidation logic
+#		insertion logic (number times used)
+#		test
 #		make heuristic
 #	Implement global copy-statement
 #		only on a=b;
