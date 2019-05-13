@@ -14,11 +14,12 @@ typedef struct Subexprssion{
 	char op[MAX_USR_VAR_NAME_LEN + 1];
 	char expr_2[MAX_USR_VAR_NAME_LEN + 1];
 
-	int temp_var;
+	int temp_var;			// Temp variable (_t#) that holds the expression
 
-	int valid;				// Is the expression still valid (made invalid when one of the values written to)
 	int depth_created_in;	// When the depth is left, the expression becomes invalid
 							// (no guarantee path was taken to spot where it was declared)
+
+	int valid;				// Is the expression still valid (made invalid when one of the values written to)
 
 } Subexpr;
 
@@ -28,7 +29,9 @@ int num_sub_exprs;
 int cse_next_temp_var_name;
 FILE *cse_temp_tac_ptr;
 FILE * cse_opt_tac_ptr;
-int line_num ;
+
+int cse_line_num;		// NOTE: the line number is for to the input tac file, NOT THE OUTPUT!!!
+int cse_ifelse_depth;
 
 // Go through the input file and find the last assigned temporary variable.
 // (will have the largest value in the form _t#); when doing CSE, can the
@@ -58,7 +61,7 @@ void _cse_init_first_temp_var_name(char *input_file)
 
 		while(tok != NULL)
 		{
-			if(tok[0] == '_')
+			if(tok[0] == '_')	// Ignore constants, user vars, and the "if" in "if(_t#)"
 			{
 				int temp_name = atoi(tok+2);
 
@@ -94,8 +97,12 @@ int _cse_record_subexpression(char *expr_1, char *op, char *expr_2)
 	strcpy(subexpr_table[num_sub_exprs].op, op);
 	strcpy(subexpr_table[num_sub_exprs].expr_2, expr_2);
 	subexpr_table[num_sub_exprs].temp_var = cse_next_temp_var_name;
+	subexpr_table[num_sub_exprs].depth_created_in = cse_ifelse_depth;
 	subexpr_table[num_sub_exprs].valid = 1;
 
+	printf("Recorded %s %s %s, stored in _t%d at depth %d\n",
+			expr_1, op, expr_2, cse_next_temp_var_name, cse_ifelse_depth);
+			
 	num_sub_exprs++;
 	cse_next_temp_var_name++;
 
@@ -139,15 +146,15 @@ int _cse_get_expression_index(char *expr_1, char *op, char *expr_2)
 	return -1;
 }
 
-// Checks if the cs used is used again after the current line
-// Only worth creating a temp variable for elimination if that cs is used more
-// than once
+// Checks if the cs used is used again after the current line before being invalidated
+// Only worth creating a temp variable for elimination if that cs is used again
+// before being invalidated by assignment
 int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 {
 	FILE * temp_file_ptr = fopen(opt_tac_name, "r");
 	if(temp_file_ptr == NULL)
 	{
-		printf("Couldn't open %s for checking number of cs usages after line %d\n", opt_tac_name, line_num);
+		printf("Couldn't open %s for checking number of cs usages after line %d\n", opt_tac_name, cse_line_num);
 	}
 
 	char line[MAX_USR_VAR_NAME_LEN * 4];
@@ -156,30 +163,62 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 	// Move pasts the current line
 	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, temp_file_ptr) != NULL)
 	{
-		if(i == line_num)
+
+		if(i == cse_line_num)
 		{
+			i++; // Need to increment because the next while will be reading the next line
 			break;
 		}
-		else
-		{
-			i++;
-		}
+
+		i++;
 	}
 
-	// Once past the current line, look for another instance of the CS
+	// cse_ifelse_depth represent the depth the CS would be created at
+	// temp_ifelse_context is the future depth after the line this subexpression is in
+	int temp_ifelse_context = cse_ifelse_depth;
+
+	// Once past the current line, look for another instance of the subexpression
 	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, temp_file_ptr) != NULL)
 	{
-		strtok(line, " =;\n");
-		char *temp_expr_1 = strtok(NULL, " =;\n");
-		char *temp_op = strtok(NULL, " =;\n");
-		char *temp_expr_2 = strtok(NULL, " =;\n");
-
-		if(strstr(line, "{") != NULL || strstr(line, "}") != NULL)
+		if(strstr(line, "if(") != NULL )
 		{
+			temp_ifelse_context++;
 			i++;
 			continue;
 		}
-		else if(temp_expr_1 != NULL && temp_op != NULL && temp_expr_2 != NULL)
+		else if(strstr(line, "}") != NULL)
+		{
+			if(strstr(line, "} else {") != NULL)
+			{
+				if(cse_ifelse_depth >= temp_ifelse_context)
+				{
+					// Have left the context the expression was first used in 
+					break;
+				}
+				
+				temp_ifelse_context--;
+			}
+			
+			i++;
+			continue;
+		}
+		
+		char *temp_assigned = strtok(line, " =;\n");
+		int match1 = strcmp(temp_assigned, expr_1) == 0;
+		int match2 = strcmp(temp_assigned, expr_2) == 0;
+
+		// If one of the variables is written to before finding another uses of the
+		// expression, it is not worth creating a new variable for it
+		if(match1 || match2)
+		{
+			break;
+		}
+		
+		char *temp_expr_1 = strtok(NULL, " =;\n");
+		char *temp_op = strtok(NULL, " =;\n");
+		char *temp_expr_2 = strtok(NULL, " =;\n");
+		
+		if(temp_expr_1 != NULL && temp_op != NULL && temp_expr_2 != NULL)
 		{
 			if(strcmp(op, temp_op) != 0)
 			{
@@ -193,7 +232,8 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 			if(one_one && two_two)
 			{
 				fclose(temp_file_ptr);
-				printf("CS %s %s %s used again at line %d\n", expr_1, op, expr_2, i);
+				// printf("CS %s %s %s (from line %d) used again at line %d\n", 
+					// expr_1, op, expr_2, cse_line_num, i);
 				return 1;
 			}
 			else if(strcmp(op, "+") == 0 || strcmp(op, "*") == 0)
@@ -205,7 +245,8 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 				if(one_two && two_one)
 				{
 					fclose(temp_file_ptr);
-					printf("CS %s %s %s used again at line %d\n", expr_1, op, expr_2, i);
+					// printf("CS %s %s %s (from line %d) used again at line %d\n", 
+						// expr_1, op, expr_2, cse_line_num, i);
 					return 1;
 				}
 			}
@@ -214,10 +255,83 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 		i++;
 	}
 
-	printf("CS %s %s %s NOT used again after line %d\n", expr_1, op, expr_2, line_num);
+	// At this point, it was found that the sub expression was either:
+	// 		never used again after this point
+	// 		before being used again, one of its variables was written to
+	// 		the if/else context it was created in was left before another use was found
+	// In any of these cases, it is not worth inserting a variable to substitute it
+		
 	fclose(temp_file_ptr);
-
 	return 0;
+}
+
+// Record when the if/else level is changed (when a context is entered or left)
+// When a context is left, go through the subexpression table and invalidate
+// any subexpression that was created inside that context
+void _cse_ifelse_context_invalidator(char *ifelse_line)
+{
+	if(strstr(ifelse_line, "if(") != NULL)
+	{
+		cse_ifelse_depth++;
+		// printf("Depth=%d on line %d b/c of %s", cse_ifelse_depth, cse_line_num, ifelse_line);
+	}
+	else if(strstr(ifelse_line, "} else {") != NULL)
+	{
+		// If leaving a context, go through the subexpression table and invalidate as needed
+		int i;
+		for(i = 0; i < num_sub_exprs; i++)
+		{
+			// Skip over already invalidated CSs
+			if(!subexpr_table[i].valid)
+			{
+				continue;
+			}
+
+			if(subexpr_table[i].depth_created_in >= cse_ifelse_depth)
+			{
+				subexpr_table[i].valid = 0;
+				printf("Invalidated %s %s %s since the context it was created in exited at line %d\n",
+					subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, cse_line_num);
+			}
+		}
+
+		cse_ifelse_depth--;
+		// printf("Depth=%d on line %d b/c of %s", cse_ifelse_depth, cse_line_num, ifelse_line);
+	}
+	else
+	{
+		// Don't need to care about closing "}" for else statements
+		// else statements will never have a CS since always either empty or has var = 0;
+		// Can decrement depth and invalidate when end of if is reached.
+	}
+
+	return;
+}
+
+// If a variable is assigned a value on any path, all the CSs it was used in
+ // are now invalid
+void _cse_invalidate_cs_with_assigned_var(char *assigned)
+{
+	int i;
+	for(i = 0; i < num_sub_exprs; i++)
+	{
+		if(!subexpr_table[i].valid)
+		{
+			continue;
+		}
+
+		int match1 = strcmp(assigned, subexpr_table[i].expr_1) == 0;
+		int match2 = strcmp(assigned, subexpr_table[i].expr_2) == 0;
+
+		if(match1 || match2)
+		{
+			subexpr_table[i].valid = 0;
+			printf("Invalidated %s %s %s since %s was assigned value on line %d\n",
+			subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, assigned, cse_line_num);
+		}
+	}
+
+	return;
 }
 
 // For an expression to be considered an acceptable subexpression,
@@ -230,9 +344,9 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 	if(strstr(tac_line, "{") != NULL || strstr(tac_line, "}") != NULL)
 	{
 		fprintf(cse_temp_tac_ptr, "%s", tac_line);
-
-		// TO DO Update context tracker
-		// TO DO invalidate all CSE temps that were created in the nest scope when it is left
+		
+		// Process if/else context change
+		_cse_ifelse_context_invalidator(tac_line);
 
 		return;
 	}
@@ -251,36 +365,32 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 		int index = _cse_get_expression_index(expr_1, op, expr_2);
 		if(index == -1)
 		{
-			// Only record subexpression if it is used at least once more in the 
-			// program following the current point
+			// Only record subexpression if it is used at least once more in the
+			// program following the current point (before written to or context left)
 			int used_again = _cse_used_again(opt_tac_name, expr_1, op, expr_2);
 			if(used_again)
 			{
 				int temp_var_to_use = _cse_record_subexpression(expr_1, op, expr_2);
 
-				// Assign new temp variable with the cs
+				// Assign new temp variable with the CS
 				fprintf(cse_temp_tac_ptr, "_t%d = %s %s %s;\n", temp_var_to_use, expr_1, op, expr_2);
 
 				// Give the assigned value of the statement this temp variable
 				fprintf(cse_temp_tac_ptr, "%s = _t%d;\n", assigned, temp_var_to_use);
 			}
-			else 
+			else
 			{
 				// If not used more than once, just copy statement over
 				fprintf(cse_temp_tac_ptr, "%s", tac_line);
 			}
 		}
-		else if(index != -1)
+		else // (index != -1)
 		{
-			// Insert the already defined temp variable for the already recorded cs
+			// Insert the assigned temp variable for the already recorded CS
 			int temp_var_to_use = subexpr_table[index].temp_var;
 
 			fprintf(cse_temp_tac_ptr, "%s = _t%d;\n", assigned, temp_var_to_use);
-		}
-		else
-		{
-			// Statement does not have a common subexpression, just copy statement over
-			fprintf(cse_temp_tac_ptr, "%s", tac_line);
+			printf("Used _t%d on line %d\n", temp_var_to_use, cse_line_num);
 		}
 	}
 	else
@@ -290,19 +400,19 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 	}
 
 	// Go through table and invalidate any subexpression that contains "assigned"
-	// bases on the depth and path
-	// TO DO
+	_cse_invalidate_cs_with_assigned_var(assigned);
 
-
+	return;
 }
 
-// write optimizations to tac-optimized template
+// Write optimizations to tac-optimized template
 void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 {
 	// Reset these values for the next iteration of optimizations
 	num_sub_exprs = 0;
 	cse_next_temp_var_name = 0;
-	line_num = 0;
+	cse_line_num = 0;
+	cse_ifelse_depth = 0;
 
 	cse_temp_tac_ptr = fopen(temp_tac_name, "w"); // Clear contents of temp file for next opt iteration
 	if (cse_temp_tac_ptr == NULL)
@@ -324,7 +434,7 @@ void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, cse_opt_tac_ptr) != NULL)
 	{
 		_cse_process_tac_line(line, opt_tac_name);
-		line_num++;
+		cse_line_num++;
 	}
 
 	fclose(cse_temp_tac_ptr);

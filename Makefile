@@ -2,14 +2,11 @@
 # CPEG 621 Project - Calculator Compiler
 
 # Optimizations
-#	Implement global common subexpr
-# 		invalidation logic
-#		test
-#		make heuristic
 #	Implement global copy-statement
 #		only on a=b;
-#		make heuristic
-#	Determine fix point
+#	Determine fix point and heuristic
+#		Need good tests to demonstrate them working together
+#		If neither optimization made any changes
 #		when both have an equal number of changes for 3 times in a row?
 # 			what if weird oscillating pattern?
 # Get 3 deep to work
@@ -35,14 +32,19 @@ bison-dbg:
 
 # Compile the outputted C code
 # Disable gcc optimizations to see how effective my optimizations are
-ccode: Output/backend.c Output/backend-timing.c
+ccode: Output/backend.c Output/backend-opt.c Output/backend-timing.c Output/backend-opt-timing.c
 	gcc -O0 -o Output/prog Output/backend.c -lm
+	gcc -O0 -o Output/prog-opt Output/backend-opt.c -lm
 	gcc -O0 -o Output/prog-time Output/backend-timing.c -lm
+	gcc -O0 -o Output/prog-opt-time Output/backend-opt-timing.c -lm
 
 # Same as above, but with warnings (will see unused labels)
-ccodew: Output/backend.c Output/backend-timing.c
+ccodew: Output/backend.c Output/backend-opt.c Output/backend-timing.c Output/backend-opt-timing.c
 	gcc -Wall -O0 -o Output/prog Output/backend.c -lm
+	gcc -Wall -O0 -o Output/prog-opt Output/backend-opt.c -lm
 	gcc -Wall -O0 -o Output/prog-time Output/backend-timing.c -lm
+	gcc -Wall -O0 -o Output/prog-opt-time Output/backend-opt-timing.c -lm
+	
 
 clean:
 	rm -f calc.tab.* lex.yy.c calc.output calc

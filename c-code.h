@@ -1,7 +1,7 @@
 // Benjamin Steenkamer
 // CPEG 621 Project - Calculator Compiler
 
-#define NUM_ITERS 100000	 // For timing analysis, the number of time the generated code will be looped
+#define NUM_ITERS 500000	 // For timing analysis, the number of time the generated code will be looped
 #define MAX_NUM_TEMP_VARS 1024
 
 void init_c_code();

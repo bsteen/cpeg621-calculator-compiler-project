@@ -320,14 +320,15 @@ int main(int argc, char *argv[])
 	// {
 		cse_do_optimization(opt_tac_name, temp_tac_name);
 		// copy_stmnt_do_optimization(opt_temp_name, opt_temp_name);
+		// DEBUG: pause to check
 	// }
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing
 	gen_c_code(frontend_tac_name, "Output/backend.c", 0);
 	gen_c_code(frontend_tac_name, "Output/backend-timing.c", 1);
-	// gen_c_code(opt_tac_name, "Output/backend-opt.c", 0);
-	// gen_c_code(opt_tac_name, "Output/backend-opt-timing.c", 1);
+	gen_c_code(opt_tac_name, "Output/backend-opt.c", 0);
+	gen_c_code(opt_tac_name, "Output/backend-opt-timing.c", 1);
 
 	return 0;
 }
