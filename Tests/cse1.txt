@@ -1,8 +1,10 @@
+a+a
 b + c
 c + b
 b + c
 1 + 1
 1 + 2
+1+2
 1 - 2
 2 - 1
 2 - 1
@@ -17,7 +19,11 @@ c * b
 b * c
 b / c
 c / b
+b+b
+c+c
 b / c
 b ** c
 c ** b
 b ** c
+b+b
+d+d
