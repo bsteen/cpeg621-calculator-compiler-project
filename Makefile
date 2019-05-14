@@ -3,7 +3,17 @@
 
 # Optimizations
 #	Implement global copy-statement
-#		only on a=b;
+#	two to two, two to three, three to two
+# 	Need to remember x = !var or const; count as a "three" statement
+#		Store with has_not_op
+#	Don't record _c# = 
+#	Insert into if(...)
+#	delete x=x
+#
+# 	CSE use _c# instead of _t#
+#	C code gen, include _c# in declaration	
+#	Pay attention to if() now
+#
 #	Determine fix point and heuristic
 #		Need good tests to demonstrate them working together
 #		If neither optimization made any changes
