@@ -235,17 +235,29 @@ void gen_c_code(char *input, char *output, int timing)
 		{
 			char temp[MAX_USR_VAR_NAME_LEN * 4];
 			strcpy(temp, line_buf);
-
-			char *first = strtok(temp, " \t=*;");		// Lines with ** will always have 3 operands
-			char *second = strtok(NULL, " \t=*;");
-			char *third = strtok(NULL, " \t=*;");
 			
-			if(line_buf[0] == '\t')		// Case for basic block code to maintain leading tab
+			// Case where pow operator inside if conditional
+			if(strstr(line_buf, "if(") != NULL)
 			{
-				sprintf(line_buf, "\t%s = (int)pow(%s, %s);\n", first, second, third);
+				strtok(temp, " \t*(){");
+				char *first = strtok(NULL, " \t*(){");
+				char *second = strtok(NULL, " \t*(){");
+				
+				sprintf(line_buf, "if((int)pow(%s, %s)) {\n", first, second);
 			}
-			else{
-				sprintf(line_buf, "%s = (int)pow(%s, %s);\n", first, second, third);
+			else
+			{
+				char *first = strtok(temp, " \t=*;");
+				char *second = strtok(NULL, " \t=*;");
+				char *third = strtok(NULL, " \t=*;");
+				
+				if(line_buf[0] == '\t')		// Case for basic block code to maintain leading tab
+				{
+					sprintf(line_buf, "\t%s = (int)pow(%s, %s);\n", first, second, third);
+				}
+				else{
+					sprintf(line_buf, "%s = (int)pow(%s, %s);\n", first, second, third);
+				}
 			}
 		}
 

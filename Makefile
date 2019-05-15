@@ -2,17 +2,16 @@
 # CPEG 621 Project - Calculator Compiler
 
 # Optimizations
-#	Implement global copy-statement
-#	two to two, two to three, three to two
-# 	Need to remember x = !var or const; count as a "three" statement
-#		Store with has_not_op
-#	Don't record _c# = 
-#	Insert into if(...)
-#	delete x=x
-#
+#	Confirm infinite stack is true
 # 	CSE use _c# instead of _t#
+# 	Check fix
 #	C code gen, include _c# in declaration	
-#	Pay attention to if() now
+# 	make sure if(!a) is converted to if(~a) in C code
+# 	Make sure ** inside if() converted correctly in C code
+#
+# 	In copy statement, delete dead vars (if _t is assigned value but never used again, delete line)
+#		What happens if temp deleted inside if statement and it was the only this there?
+#		Also delete self assigns
 #
 #	Determine fix point and heuristic
 #		Need good tests to demonstrate them working together

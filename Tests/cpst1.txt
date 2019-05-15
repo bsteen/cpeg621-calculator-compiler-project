@@ -1,0 +1,14 @@
+z = 3
+y = z
+h = y
+g = h
+y = 4
+i = h
+z = y + 2
+z = 2 - y
+z = y * y 
+y = t
+z = y / 2
+z = 2 ** y
+z = y + y
+a = 1

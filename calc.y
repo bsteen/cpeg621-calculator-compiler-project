@@ -11,6 +11,7 @@
 #include "c-code.h"
 #include "cse.h"
 #include "data-dep.h"
+#include "copy-stmt-elim.h"
 
 int yylex(void);					// Will be generated in lex.yy.c by flex
 
@@ -314,14 +315,20 @@ int main(int argc, char *argv[])
 	copy_to_file(opt_tac_name, frontend_tac_name);
 	
 	char *temp_tac_name = "Output/tac-opt-temp.txt";
+	int cse_changes = 0;
+	int cpt_st_changes = 0;
+	int num_opt_loops = 0;
 	
 	// Start the optimization loop
-	// while()
-	// {
-		cse_do_optimization(opt_tac_name, temp_tac_name);
-		// copy_stmnt_do_optimization(opt_temp_name, opt_temp_name);
-		// DEBUG: pause to check
-	// }
+	do
+	{
+		cse_changes = cse_do_optimization(opt_tac_name, temp_tac_name);
+		cpt_st_changes = cp_st_do_optimization(opt_tac_name, temp_tac_name);
+		num_opt_loops++;
+		
+	} while(cse_changes > 0 || cpt_st_changes > 0);
+		
+	printf("Performed %d optimization loops\n", num_opt_loops);
 
 	// Generate runnable C code for unoptimized and and optimized, with and
 	// without timing
