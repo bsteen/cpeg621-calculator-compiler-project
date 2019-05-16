@@ -14,7 +14,7 @@ typedef struct Subexprssion{
 	char op[MAX_USR_VAR_NAME_LEN + 1];
 	char expr_2[MAX_USR_VAR_NAME_LEN + 1];
 
-	int temp_var;			// Temp variable (_t#) that holds the expression
+	int temp_var;			// Temp variable (_c#) that holds the expression
 
 	int depth_created_in;	// When the depth is left, the expression becomes invalid
 							// (no guarantee path was taken to spot where it was declared)
@@ -34,8 +34,8 @@ int cse_line_num;		// NOTE: the line number is for to the input tac file, NOT TH
 int cse_ifelse_depth;
 
 // Go through the input file and find the last assigned temporary variable.
-// (will have the largest value in the form _t#); when doing CSE, can the
-// insert temporary variables that have a number one larger than the  last one
+// (will have the largest value in the form _c#); when doing CSE, can the
+// insert temporary variables that have a number one larger than the last one
 // already assigned to avoid name conflicts
 void _cse_init_first_temp_var_name(char *input_file)
 {
@@ -61,9 +61,10 @@ void _cse_init_first_temp_var_name(char *input_file)
 
 		while(tok != NULL)
 		{
-			if(tok[0] == '_')	// Ignore constants, user vars, and the "if" in "if(_t#)"
+			// Ignore constants, user vars, normal temps, and the "if" in "if(...)"
+			if(tok[0] == '_' && tok[1] == 'c')
 			{
-				int temp_name = atoi(tok+2);
+				int temp_name = atoi(tok + 2);	// Skip over the "_c" part and convert last part to an int
 
 				if(temp_name >= cse_next_temp_var_name)
 				{
@@ -78,7 +79,7 @@ void _cse_init_first_temp_var_name(char *input_file)
 
 	fclose(input_file_ptr);
 
-	// printf("Starting CSE with temp var of _t%d\n", cse_next_temp_var_name);
+	printf("Starting CSE with temp var of _c%d\n", cse_next_temp_var_name);
 
 	return;
 }
@@ -100,7 +101,7 @@ int _cse_record_subexpression(char *expr_1, char *op, char *expr_2)
 	subexpr_table[num_sub_exprs].depth_created_in = cse_ifelse_depth;
 	subexpr_table[num_sub_exprs].valid = 1;
 
-	printf("Recorded %s %s %s, stored in _t%d at depth %d\n",
+	printf("Recorded %s %s %s, stored in _c%d at depth %d\n",
 			expr_1, op, expr_2, cse_next_temp_var_name, cse_ifelse_depth);
 			
 	num_sub_exprs++;
@@ -132,7 +133,7 @@ int _cse_get_expression_index(char *expr_1, char *op, char *expr_2)
 		}
 		else if(strcmp(op, "+") == 0 || strcmp(op, "*") == 0)
 		{
-			// Check for commutative operation => a +* b == b +* a
+			// Check for commutative operation => a (+*) b == b (+*) a
 			int one_two = strcmp(subexpr_table[i].expr_1, expr_2) == 0;
 			int two_one = strcmp(subexpr_table[i].expr_2, expr_1) == 0;
 
@@ -163,7 +164,6 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 	// Move pasts the current line
 	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, temp_file_ptr) != NULL)
 	{
-
 		if(i == cse_line_num)
 		{
 			i++; // Need to increment because the next while will be reading the next line
@@ -238,7 +238,7 @@ int _cse_used_again(char *opt_tac_name, char *expr_1, char *op, char *expr_2)
 			}
 			else if(strcmp(op, "+") == 0 || strcmp(op, "*") == 0)
 			{
-				// Check for commutative operation => a +* b == b +* a
+				// Check for commutative operation => a (+*) b == b (+*) a
 				int one_two = strcmp(expr_1, temp_expr_2) == 0;
 				int two_one = strcmp(expr_2, temp_expr_1) == 0;
 
@@ -309,7 +309,7 @@ void _cse_ifelse_context_invalidator(char *ifelse_line)
 }
 
 // If a variable is assigned a value on any path, all the CSs it was used in
- // are now invalid
+// are now invalid
 void _cse_invalidate_cs_with_assigned_var(char *assigned)
 {
 	int i;
@@ -373,10 +373,10 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 				int temp_var_to_use = _cse_record_subexpression(expr_1, op, expr_2);
 
 				// Assign new temp variable with the CS
-				fprintf(cse_temp_tac_ptr, "_t%d = %s %s %s;\n", temp_var_to_use, expr_1, op, expr_2);
+				fprintf(cse_temp_tac_ptr, "_c%d = %s %s %s;\n", temp_var_to_use, expr_1, op, expr_2);
 
 				// Give the assigned value of the statement this temp variable
-				fprintf(cse_temp_tac_ptr, "%s = _t%d;\n", assigned, temp_var_to_use);
+				fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
 			}
 			else
 			{
@@ -389,8 +389,8 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 			// Insert the assigned temp variable for the already recorded CS
 			int temp_var_to_use = subexpr_table[index].temp_var;
 
-			fprintf(cse_temp_tac_ptr, "%s = _t%d;\n", assigned, temp_var_to_use);
-			printf("Used _t%d on line %d\n", temp_var_to_use, cse_line_num);
+			fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
+			printf("Used _c%d on line %d\n", temp_var_to_use, cse_line_num);
 		}
 	}
 	else
@@ -442,4 +442,6 @@ void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
+	
+	return;
 }

@@ -210,7 +210,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 		{
 			strcat(output, "!");
 			strcat(output, cp_st_table[index].expr_1);
-			printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
+			printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_1, output);
 			cp_st_changes_made++;
 		}
 		else

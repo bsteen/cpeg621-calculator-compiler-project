@@ -114,11 +114,11 @@ int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 {
 	// printf("%s in S%d looking back at S%d\n", var_name, num_stmts, statement_num);
 
-	int if_checker_in_else = (stmt_dep_array[num_stmts].dd_ifelse_depth != 0) && !stmt_dep_array[num_stmts].dd_inside_if;
+	int is_checker_in_else = (stmt_dep_array[num_stmts].dd_ifelse_depth != 0) && !stmt_dep_array[num_stmts].dd_inside_if;
 	int other_is_equal_or_deeper = stmt_dep_array[statement_num].dd_ifelse_depth >= stmt_dep_array[num_stmts].dd_ifelse_depth;
 	int in_same_nest = stmt_dep_array[statement_num].dd_ifelse_id == stmt_dep_array[num_stmts].dd_ifelse_id;
 
-	if(in_same_nest && if_checker_in_else && other_is_equal_or_deeper)
+	if(in_same_nest && is_checker_in_else && other_is_equal_or_deeper)
 	{
 		// printf("%s in S%d (ELSE) and S%d (equal or deeper down) not dependent => in different paths\n", var_name, num_stmts, statement_num);
 		return 0;
@@ -151,13 +151,14 @@ int _dd_verify_ifelse_dependence(char *var_name, int statement_num, int type)
 			
 			if(is_in_else)
 			{
-				// If future assignment is in an else-statement, it won't interfere
-				// with this dependency
+				// If future assignment is in an else-statement at a depth equal 
+				// or higher than statement being checked, it won't interfere with this dependency
 				// printf("%s in S%d won't block be blocked by future assignment in S%d (else)\n", var_name, statement_num, i);
 				continue;
 			}
 			else
 			{
+				// Is in the same if statement and further on at the same or higher up level => will block this statement being checked
 				// printf("Future assignment in S%d blocks %s in S%d\n", i, var_name, statement_num);
 				return 0;
 			}

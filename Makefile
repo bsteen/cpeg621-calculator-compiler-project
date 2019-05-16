@@ -2,16 +2,16 @@
 # CPEG 621 Project - Calculator Compiler
 
 # Optimizations
-#	Confirm infinite stack is true
-# 	CSE use _c# instead of _t#
+# 	Can CSE see inside if(...)?
+#	Add change counter for CSE
 # 	Check fix
-#	C code gen, include _c# in declaration	
+# 	Only do CSE if used more than once afterwards
 # 	make sure if(!a) is converted to if(~a) in C code
 # 	Make sure ** inside if() converted correctly in C code
 #
 # 	In copy statement, delete dead vars (if _t is assigned value but never used again, delete line)
 #		What happens if temp deleted inside if statement and it was the only this there?
-#		Also delete self assigns
+#		Also delete self assigns but not if is the last thing in the if/else statement
 #
 #	Determine fix point and heuristic
 #		Need good tests to demonstrate them working together

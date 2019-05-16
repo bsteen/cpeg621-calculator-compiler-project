@@ -322,8 +322,12 @@ int main(int argc, char *argv[])
 	// Start the optimization loop
 	do
 	{
-		cse_changes = cse_do_optimization(opt_tac_name, temp_tac_name);
+		// char a;
+		/*cse_changes =*/ cse_do_optimization(opt_tac_name, temp_tac_name);
+		// scanf("%c", &a);
+		
 		cpt_st_changes = cp_st_do_optimization(opt_tac_name, temp_tac_name);
+		// scanf("%c", &a);
 		num_opt_loops++;
 		
 	} while(cse_changes > 0 || cpt_st_changes > 0);
