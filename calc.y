@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
 	do
 	{
 		// char a;
-		/*cse_changes =*/ cse_do_optimization(opt_tac_name, temp_tac_name);
+		cse_changes = cse_do_optimization(opt_tac_name, temp_tac_name);
 		// scanf("%c", &a);
 		
 		cpt_st_changes = cp_st_do_optimization(opt_tac_name, temp_tac_name);

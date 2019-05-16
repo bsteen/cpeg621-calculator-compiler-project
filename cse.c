@@ -32,6 +32,7 @@ FILE * cse_opt_tac_ptr;
 
 int cse_line_num;		// NOTE: the line number is for to the input tac file, NOT THE OUTPUT!!!
 int cse_ifelse_depth;
+int cse_changes_made;
 
 // Go through the input file and find the last assigned temporary variable.
 // (will have the largest value in the form _c#); when doing CSE, can the
@@ -377,6 +378,7 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 
 				// Give the assigned value of the statement this temp variable
 				fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
+				cse_changes_made++;
 			}
 			else
 			{
@@ -391,6 +393,7 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 
 			fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
 			printf("Used _c%d on line %d\n", temp_var_to_use, cse_line_num);
+			cse_changes_made++;
 		}
 	}
 	else
@@ -406,13 +409,14 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 }
 
 // Write optimizations to tac-optimized template
-void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
+int cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 {
 	// Reset these values for the next iteration of optimizations
 	num_sub_exprs = 0;
 	cse_next_temp_var_name = 0;
 	cse_line_num = 0;
 	cse_ifelse_depth = 0;
+	cse_changes_made = 0;
 
 	cse_temp_tac_ptr = fopen(temp_tac_name, "w"); // Clear contents of temp file for next opt iteration
 	if (cse_temp_tac_ptr == NULL)
@@ -443,5 +447,7 @@ void cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
 	
-	return;
+	printf("CSE changes made: %d\n\n", cse_changes_made);
+	
+	return cse_changes_made;
 }

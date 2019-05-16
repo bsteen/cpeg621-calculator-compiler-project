@@ -3,11 +3,7 @@
 
 # Optimizations
 # 	Can CSE see inside if(...)?
-#	Add change counter for CSE
-# 	Check fix
 # 	Only do CSE if used more than once afterwards
-# 	make sure if(!a) is converted to if(~a) in C code
-# 	Make sure ** inside if() converted correctly in C code
 #
 # 	In copy statement, delete dead vars (if _t is assigned value but never used again, delete line)
 #		What happens if temp deleted inside if statement and it was the only this there?
