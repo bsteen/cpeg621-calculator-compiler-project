@@ -442,6 +442,64 @@ void _cpy_st_process_tac_line(char *tac_line)
 	return;
 }
 
+
+// After the main copy statement logic is done, go through and remove any temporary
+// variables that are assigned a value but then never used again
+// Don't remove the temps if they are the TAC thing in an if statement, as they
+// may be the only TAC in the if and removing it would mess up the expected forms 
+void cp_st_remove_dead_temps(char *opt_tac_name, char *temp_tac_name)
+{
+	cp_st_temp_tac_ptr = fopen(temp_tac_name, "w");
+	if (cp_st_temp_tac_ptr == NULL)
+	{
+		printf("Copy statement couldn't open %s for writing out without dead temps to\n", temp_tac_name);
+		exit(1);
+	}
+
+	cp_st_opt_tac_ptr = fopen(opt_tac_name, "r");
+	if (cp_st_opt_tac_ptr == NULL)
+	{
+		printf("Copy statement couldn't open %s for reading in to remove dead temps\n", opt_tac_name);
+		exit(1);
+	}
+	
+	char line[LINE_BUF_SIZE];
+	while(fgets(line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
+	{
+		long int saved_pos = ftell(cp_st_opt_tac_ptr);
+		char future_line[LINE_BUF_SIZE];
+		int remove_line = 1;
+		
+		while(fgets(future_line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
+		{
+			
+			// Last line of if if statement
+			// or appears any where after
+			
+			remove_line = 0;
+		}
+		
+		fseek(cp_st_opt_tac_ptr, saved_pos, SEEK_SET);
+		
+		if(remove_line)
+		{
+			cp_st_changes_made++;
+		}
+		else
+		{
+			fprintf(cp_st_temp_tac_ptr, "%s", line);
+		}
+	}
+	
+	
+	fclose(cp_st_temp_tac_ptr);
+	fclose(cp_st_opt_tac_ptr);
+	
+	copy_to_file(opt_tac_name, temp_tac_name);
+	
+	return;
+}
+
 // Main optimization loop for copy statement elimination
 int cp_st_do_optimization(char *opt_tac_name, char *temp_tac_name)
 {
@@ -478,7 +536,10 @@ int cp_st_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
 	
-	printf("Copy-statement Elim. changes made: %d\n\n", cp_st_changes_made);
+	// Perform one last optimization: delete dead temps
+	cp_st_remove_dead_temp(opt_tac_name, temp_tac_name)
+	
+	printf("Copy-statement Elim. changes made: %d\n", cp_st_changes_made);
 	
 	return cp_st_changes_made;
 }

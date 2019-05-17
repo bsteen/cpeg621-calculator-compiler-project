@@ -2,18 +2,19 @@
 # CPEG 621 Project - Calculator Compiler
 
 # Optimizations
-# 	Can CSE see inside if(...)?
-# 	Only do CSE if used more than once afterwards
-#
 # 	In copy statement, delete dead vars (if _t is assigned value but never used again, delete line)
 #		What happens if temp deleted inside if statement and it was the only this there?
 #		Also delete self assigns but not if is the last thing in the if/else statement
+#
+# 	Can CSE see inside if(...)?
+# 	Only do CSE if used MORE than once afterwards?
 #
 #	Determine fix point and heuristic
 #		Need good tests to demonstrate them working together
 #		If neither optimization made any changes
 #		when both have an equal number of changes for 3 times in a row?
 # 			what if weird oscillating pattern?
+#
 # Get 3 deep to work
 #	Test
 #	Test with dependency
