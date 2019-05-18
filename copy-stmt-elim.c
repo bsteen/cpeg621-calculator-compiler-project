@@ -163,7 +163,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 				strcat(output, expr_1);
 			}
 		}
-		
+
 		strcat(output, " ");	// Add the operator back in
 		strcat(output, op);
 		strcat(output, " ");
@@ -240,7 +240,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 
 				strcat(output, cp_st_table[index].expr_1);
 				cp_st_changes_made++;
-				
+
 				printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
 			}
 			else
@@ -254,7 +254,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 					strcat(output, cp_st_table[index].op);
 					strcat(output, cp_st_table[index].expr_2);
 					cp_st_changes_made++;
-					
+
 					printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_2, output);
 				}
 				else
@@ -268,7 +268,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 					strcat(output, " ");
 					strcat(output, cp_st_table[index].expr_2);
 					cp_st_changes_made++;
-					
+
 					printf("REPLACED %s with %s %s %s in %s\n", expr_1, cp_st_table[index].expr_1,
 							cp_st_table[index].op, cp_st_table[index].expr_2, output);
 				}
@@ -312,7 +312,7 @@ void _cpy_st_ifelse_context_invalidator(char *ifelse_line)
 					cp_st_table[i].assigned, cp_st_line_num);
 			}
 		}
-		
+
 		if (strcmp(ifelse_line, "}\n") == 0)
 		{
 			cp_st_ifelse_depth--;
@@ -383,9 +383,9 @@ void _cpy_st_process_tac_line(char *tac_line)
 
 		char if_temp[LINE_BUF_SIZE];
 		strcpy(if_temp, "");
-		
+
 		_cpy_st_insert_copies(if_temp, expr_1, op, expr_2);
-		
+
 		strcpy(new_statment, "if(");
 		strcat(new_statment, if_temp);
 		strcat(new_statment, ") {\n");
@@ -413,9 +413,10 @@ void _cpy_st_process_tac_line(char *tac_line)
 
 	// Go through table and invalidate any copy statement that contains "assigned"
 	_cpy_st_inval_with_assigned_var(assigned);
-	
+
 	// Record the assignment statement in the table
 	int index = _cp_st_get_statement_index(assigned);
+
 	if(index == -1)
 	{
 		// DON'T RECORD _c = ... to prevent "infinite stack" with CSE insertions
@@ -442,17 +443,16 @@ void _cpy_st_process_tac_line(char *tac_line)
 	return;
 }
 
-
 // After the main copy statement logic is done, go through and remove any temporary
 // variables that are assigned a value but then never used again
-// Don't remove the temps if they are the TAC thing in an if statement, as they
-// may be the only TAC in the if and removing it would mess up the expected forms 
-void cp_st_remove_dead_temps(char *opt_tac_name, char *temp_tac_name)
+// Don't remove the temps if they are the last statement in an if statement, as they
+// may be the only TAC in the if and removing it would mess up the expected forms
+void _cp_st_remove_dead_temp(char *opt_tac_name, char *temp_tac_name)
 {
 	cp_st_temp_tac_ptr = fopen(temp_tac_name, "w");
 	if (cp_st_temp_tac_ptr == NULL)
 	{
-		printf("Copy statement couldn't open %s for writing out without dead temps to\n", temp_tac_name);
+		printf("Copy statement couldn't open %s for writing out and removing dead temps to\n", temp_tac_name);
 		exit(1);
 	}
 
@@ -462,41 +462,81 @@ void cp_st_remove_dead_temps(char *opt_tac_name, char *temp_tac_name)
 		printf("Copy statement couldn't open %s for reading in to remove dead temps\n", opt_tac_name);
 		exit(1);
 	}
-	
+
 	char line[LINE_BUF_SIZE];
+
+	// Go through the TAC and try to find and remove dead temps
 	while(fgets(line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
 	{
-		long int saved_pos = ftell(cp_st_opt_tac_ptr);
-		char future_line[LINE_BUF_SIZE];
-		int remove_line = 1;
-		
-		while(fgets(future_line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
+		if(strstr(line, "if(") != NULL || strstr(line, "{") != NULL)
 		{
-			
-			// Last line of if if statement
-			// or appears any where after
-			
-			remove_line = 0;
+			// if statement conditional will never have an assignment in it
+			// also ignore "} else {" and "}"
+			fprintf(cp_st_temp_tac_ptr, "%s", line);
+			continue;
 		}
-		
-		fseek(cp_st_opt_tac_ptr, saved_pos, SEEK_SET);
-		
-		if(remove_line)
+
+		char temp[LINE_BUF_SIZE];
+		strcpy(temp, line);
+		char *assigned = strtok(temp, " ");
+
+		if(strstr(assigned, "_t") != NULL)
 		{
-			cp_st_changes_made++;
+			long int saved_pos = ftell(cp_st_opt_tac_ptr);
+			char future_line[LINE_BUF_SIZE];
+			int remove_line = 1;
+			int checked_if_end_of_if = 0;
+
+			// Look forward from the current line to see if the temp is used again
+			while(fgets(future_line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
+			{
+				if(!checked_if_end_of_if)
+				{
+					checked_if_end_of_if = 1;
+					
+					// If the temp assignment is the last thing before the end of an if
+					// statement, don't remove it to maintain the expect if/else form
+					if(strstr(future_line, "} else {") != NULL)
+					{
+						remove_line = 0;
+						break;
+					}
+				}
+				
+				// If the temp variable appears again in the program from the
+				// current line, don't remove it
+				if(strstr(future_line, assigned) != NULL)
+				{
+					remove_line = 0;
+					break;
+				}
+			}
+
+			fseek(cp_st_opt_tac_ptr, saved_pos, SEEK_SET); // Restore the file pointer position
+
+			if(remove_line)
+			{
+				// Remove the line by not printing to the TAC file
+				cp_st_changes_made++;
+				printf("REMOVED dead temp assignment: %s", line);
+			}
+			else
+			{
+				fprintf(cp_st_temp_tac_ptr, "%s", line);
+			}
 		}
 		else
 		{
+			// Statement doesn't contain temp as assignment, continue on
 			fprintf(cp_st_temp_tac_ptr, "%s", line);
 		}
 	}
-	
-	
+
 	fclose(cp_st_temp_tac_ptr);
 	fclose(cp_st_opt_tac_ptr);
-	
+
 	copy_to_file(opt_tac_name, temp_tac_name);
-	
+
 	return;
 }
 
@@ -535,11 +575,11 @@ int cp_st_do_optimization(char *opt_tac_name, char *temp_tac_name)
 
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
-	
+
 	// Perform one last optimization: delete dead temps
-	cp_st_remove_dead_temp(opt_tac_name, temp_tac_name)
-	
+	_cp_st_remove_dead_temp(opt_tac_name, temp_tac_name);
+
 	printf("Copy-statement Elim. changes made: %d\n", cp_st_changes_made);
-	
+
 	return cp_st_changes_made;
 }

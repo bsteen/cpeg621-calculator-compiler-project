@@ -71,7 +71,6 @@ void _cse_init_first_temp_var_name(char *input_file)
 				{
 					cse_next_temp_var_name = temp_name + 1;
 				}
-
 			}
 
 			tok = strtok(NULL, " +-*/!=();\n");
@@ -108,11 +107,11 @@ int _cse_record_subexpression(char *expr_1, char *op, char *expr_2, int reuse_th
 	}
 	else
 	{
-		printf("Reusing _c%d for cs %s %s %s\n", reuse_this_temp, expr_1, op, expr_2);
+		printf("REUSING _c%d for cs %s %s %s\n", reuse_this_temp, expr_1, op, expr_2);
 		subexpr_table[num_sub_exprs].temp_var = reuse_this_temp;
 	}
 
-	printf("Recorded %s %s %s, stored in _c%d at depth %d\n",
+	printf("RECORDED %s %s %s, stored in _c%d at depth %d\n",
 			expr_1, op, expr_2, subexpr_table[num_sub_exprs].temp_var, cse_ifelse_depth);
 
 	num_sub_exprs++;
@@ -424,7 +423,7 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 			int temp_var_to_use = subexpr_table[index].temp_var;
 
 			fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
-			printf("Used _c%d on line %d\n", temp_var_to_use, cse_line_num);
+			printf("USED _c%d on line %d\n", temp_var_to_use, cse_line_num);
 			cse_changes_made++;
 		}
 	}

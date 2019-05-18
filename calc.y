@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
 	// Start the optimization loop
 	do
 	{
-		char a = ' ';
+		char a = 'a';
 		cse_changes = cse_do_optimization(opt_tac_name, temp_tac_name);
 		scanf("%c", &a);
 		

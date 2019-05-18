@@ -7,7 +7,7 @@
 #include "calc.h"
 #include "data-dep.h"
 
-#define MAX_NUM_STATEMENTS	350
+#define MAX_NUM_STATEMENTS	512
 #define MAX_NUM_DEPENDS		128
 
 typedef struct Statement_struct
