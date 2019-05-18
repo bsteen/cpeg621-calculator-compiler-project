@@ -445,8 +445,6 @@ void _cpy_st_process_tac_line(char *tac_line)
 
 // After the main copy statement logic is done, go through and remove any temporary
 // variables that are assigned a value but then never used again
-// Don't remove the temps if they are the last statement in an if statement, as they
-// may be the only TAC in the if and removing it would mess up the expected forms
 void _cp_st_remove_dead_temp(char *opt_tac_name, char *temp_tac_name)
 {
 	cp_st_temp_tac_ptr = fopen(temp_tac_name, "w");
@@ -485,24 +483,10 @@ void _cp_st_remove_dead_temp(char *opt_tac_name, char *temp_tac_name)
 			long int saved_pos = ftell(cp_st_opt_tac_ptr);
 			char future_line[LINE_BUF_SIZE];
 			int remove_line = 1;
-			int checked_if_end_of_if = 0;
 
 			// Look forward from the current line to see if the temp is used again
 			while(fgets(future_line, LINE_BUF_SIZE, cp_st_opt_tac_ptr) != NULL)
 			{
-				if(!checked_if_end_of_if)
-				{
-					checked_if_end_of_if = 1;
-					
-					// If the temp assignment is the last thing before the end of an if
-					// statement, don't remove it to maintain the expect if/else form
-					if(strstr(future_line, "} else {") != NULL)
-					{
-						remove_line = 0;
-						break;
-					}
-				}
-				
 				// If the temp variable appears again in the program from the
 				// current line, don't remove it
 				if(strstr(future_line, assigned) != NULL)
