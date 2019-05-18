@@ -1,9 +1,5 @@
 # Benjamin Steenkamer
 # CPEG 621 Project - Calculator Compiler
-
-# Optimizations
-# 	Can CSE see inside if(...)?
-#
 #	Heuristic
 #		Need good tests to demonstrate them working together
 #
