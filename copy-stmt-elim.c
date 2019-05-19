@@ -313,7 +313,7 @@ void _cpy_st_ifelse_context_invalidator(char *ifelse_line)
 			}
 		}
 
-		if (strcmp(ifelse_line, "}\n") == 0)
+		if(strcmp(ifelse_line, "}\n") == 0)
 		{
 			cp_st_ifelse_depth--;
 			// printf("Depth=%d on line %d b/c of %s\n", cp_st_ifelse_depth, cp_st_line_num, ifelse_line);
@@ -448,14 +448,14 @@ void _cpy_st_process_tac_line(char *tac_line)
 void _cp_st_remove_dead_temp(char *opt_tac_name, char *temp_tac_name)
 {
 	cp_st_temp_tac_ptr = fopen(temp_tac_name, "w");
-	if (cp_st_temp_tac_ptr == NULL)
+	if(cp_st_temp_tac_ptr == NULL)
 	{
 		printf("Copy statement couldn't open %s for writing out and removing dead temps to\n", temp_tac_name);
 		exit(1);
 	}
 
 	cp_st_opt_tac_ptr = fopen(opt_tac_name, "r");
-	if (cp_st_opt_tac_ptr == NULL)
+	if(cp_st_opt_tac_ptr == NULL)
 	{
 		printf("Copy statement couldn't open %s for reading in to remove dead temps\n", opt_tac_name);
 		exit(1);
@@ -534,14 +534,14 @@ int cp_st_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	cp_st_changes_made = 0;
 
 	cp_st_temp_tac_ptr = fopen(temp_tac_name, "w"); // Clear contents of temp file for next opt iteration
-	if (cp_st_temp_tac_ptr == NULL)
+	if(cp_st_temp_tac_ptr == NULL)
 	{
 		printf("Copy statement couldn't open %s for writing next optimization to\n", temp_tac_name);
 		exit(1);
 	}
 
 	cp_st_opt_tac_ptr = fopen(opt_tac_name, "r");
-	if (cp_st_opt_tac_ptr == NULL)
+	if(cp_st_opt_tac_ptr == NULL)
 	{
 		printf("Copy statement couldn't open %s for reading in TAC\n", opt_tac_name);
 		exit(1);
