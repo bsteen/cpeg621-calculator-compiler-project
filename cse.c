@@ -79,7 +79,7 @@ void _cse_init_first_temp_var_name(char *input_file)
 
 	fclose(input_file_ptr);
 
-	printf("Starting CSE with temp var of _c%d\n", cse_next_temp_var_name);
+	// printf("Starting CSE with temp var of _c%d\n", cse_next_temp_var_name);
 
 	return;
 }
@@ -107,12 +107,12 @@ int _cse_record_subexpression(char *expr_1, char *op, char *expr_2, int reuse_th
 	}
 	else
 	{
-		printf("REUSING _c%d for cs %s %s %s\n", reuse_this_temp, expr_1, op, expr_2);
+		// printf("REUSING _c%d for cs %s %s %s\n", reuse_this_temp, expr_1, op, expr_2);
 		subexpr_table[num_sub_exprs].temp_var = reuse_this_temp;
 	}
 
-	printf("RECORDED %s %s %s, stored in _c%d at depth %d\n",
-			expr_1, op, expr_2, subexpr_table[num_sub_exprs].temp_var, cse_ifelse_depth);
+	// printf("RECORDED %s %s %s, stored in _c%d at depth %d\n",
+			// expr_1, op, expr_2, subexpr_table[num_sub_exprs].temp_var, cse_ifelse_depth);
 
 	num_sub_exprs++;
 
@@ -324,8 +324,8 @@ void _cse_ifelse_context_invalidator(char *ifelse_line)
 			if(subexpr_table[i].depth_created_in >= cse_ifelse_depth)
 			{
 				subexpr_table[i].valid = 0;
-				printf("Invalidated %s %s %s since the context it was created in exited at line %d\n",
-					subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, cse_line_num);
+				// printf("Invalidated %s %s %s since the context it was created in exited at line %d\n",
+					// subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, cse_line_num);
 			}
 		}
 
@@ -360,8 +360,8 @@ void _cse_invalidate_cs_with_assigned_var(char *assigned)
 		if(match1 || match2)
 		{
 			subexpr_table[i].valid = 0;
-			printf("Invalidated %s %s %s since %s was assigned value on line %d\n",
-			subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, assigned, cse_line_num);
+			// printf("Invalidated %s %s %s since %s was assigned value on line %d\n",
+					// subexpr_table[i].expr_1, subexpr_table[i].op, subexpr_table[i].expr_2, assigned, cse_line_num);
 		}
 	}
 
@@ -460,7 +460,7 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 						fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
 					}
 
-					printf("USED _c%d on line %d\n", temp_var_to_use, cse_line_num);
+					// printf("USED _c%d on line %d\n", temp_var_to_use, cse_line_num);
 					cse_changes_made++;
 				}
 			}
@@ -485,7 +485,7 @@ void _cse_process_tac_line(char *tac_line, char *opt_tac_name)
 				fprintf(cse_temp_tac_ptr, "%s = _c%d;\n", assigned, temp_var_to_use);
 			}
 
-			printf("USED _c%d on line %d\n", temp_var_to_use, cse_line_num);
+			// printf("USED _c%d on line %d\n", temp_var_to_use, cse_line_num);
 			cse_changes_made++;
 		}
 	}
@@ -549,7 +549,7 @@ int cse_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	// Copy contents from temp file back to main file
 	copy_to_file(opt_tac_name, temp_tac_name);
 
-	printf("CSE changes made: %d\n", cse_changes_made);
+	// printf("CSE changes made: %d\n", cse_changes_made);
 
 	return cse_changes_made;
 }

@@ -306,7 +306,6 @@ void _dd_check_for_dependecies(char *var_name, int written)
 			}
 		}
 	}
-	// printf("\n");
 
 	return;
 }

@@ -1,17 +1,12 @@
 # Benjamin Steenkamer
 # CPEG 621 Project - Calculator Compiler
-#	Heuristic
-#		Need good tests to demonstrate them working together
+# Heuristic
+#	Make good triple if/else tests
 #
 # Remove printout and stop points; enable DD
 # Check everything up to now
 # Start report
 #
-# Get 3 deep to work
-#	Test
-#	Test with dependency
-# 	Test with optimizations
-
 # To create the compiler middle end, type `make`
 # The binary `calc` will be created in the main folder
 # Then type `./calc Tests/<test_file_name> to run the compiler on an 

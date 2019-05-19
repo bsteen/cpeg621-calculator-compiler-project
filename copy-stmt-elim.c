@@ -56,12 +56,12 @@ void _cp_st_record_cpy_stmnt(char* assigned, char *expr_1, char *op, char *expr_
 	strcpy(cp_st_table[num_cp_stmnts].assigned, assigned);
 	cp_st_table[num_cp_stmnts].statement_type = ASSIGN;	 // Assume form of a = b unless operator is present
 
-	printf("Recorded %s = ", assigned);
+	// printf("Recorded %s = ", assigned);
 
 	if(expr_1 != NULL)
 	{
 		strcpy(cp_st_table[num_cp_stmnts].expr_1, expr_1);
-		printf("%s", expr_1);
+		// printf("%s", expr_1);
 	}
 	else
 	{
@@ -75,11 +75,11 @@ void _cp_st_record_cpy_stmnt(char* assigned, char *expr_1, char *op, char *expr_
 
 		if(expr_1 != NULL)
 		{
-			printf(" %s ", op);
+			// printf(" %s ", op);
 		}
 		else
 		{
-			printf("%s", op);	// Case for var = !var or !const
+			// printf("%s", op);	// Case for var = !var or !const
 		}
 	}
 	else
@@ -89,7 +89,7 @@ void _cp_st_record_cpy_stmnt(char* assigned, char *expr_1, char *op, char *expr_
 
 	if(expr_2 != NULL)
 	{
-		printf("%s", expr_2);
+		// printf("%s", expr_2);
 		strcpy(cp_st_table[num_cp_stmnts].expr_2, expr_2);
 	}
 	else
@@ -97,7 +97,7 @@ void _cp_st_record_cpy_stmnt(char* assigned, char *expr_1, char *op, char *expr_
 		strcpy(cp_st_table[num_cp_stmnts].expr_2, "");
 	}
 
-	printf("; on line %d at depth=%d (type=%d)\n", cp_st_line_num, cp_st_ifelse_depth, cp_st_table[num_cp_stmnts].statement_type);
+	// printf("; on line %d at depth=%d (type=%d)\n", cp_st_line_num, cp_st_ifelse_depth, cp_st_table[num_cp_stmnts].statement_type);
 
 	num_cp_stmnts++;
 
@@ -155,7 +155,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 				// x = a op c	(looking at a in current line)
 
 				strcat(output, cp_st_table[index].expr_1);
-				printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
+				// printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
 				cp_st_changes_made++;
 			}
 			else
@@ -183,7 +183,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 				// x = c op a	(looking at a in current line)
 
 				strcat(output, cp_st_table[index].expr_1);
-				printf("REPLACED %s with %s in %s\n", expr_2, cp_st_table[index].expr_1, output);
+				// printf("REPLACED %s with %s in %s\n", expr_2, cp_st_table[index].expr_1, output);
 				cp_st_changes_made++;
 			}
 			else
@@ -210,7 +210,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 		{
 			strcat(output, "!");
 			strcat(output, cp_st_table[index].expr_1);
-			printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_1, output);
+			// printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_1, output);
 			cp_st_changes_made++;
 		}
 		else
@@ -241,7 +241,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 				strcat(output, cp_st_table[index].expr_1);
 				cp_st_changes_made++;
 
-				printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
+				// printf("REPLACED %s with %s in %s\n", expr_1, cp_st_table[index].expr_1, output);
 			}
 			else
 			{
@@ -255,7 +255,7 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 					strcat(output, cp_st_table[index].expr_2);
 					cp_st_changes_made++;
 
-					printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_2, output);
+					// printf("REPLACED %s with !%s in %s\n", expr_1, cp_st_table[index].expr_2, output);
 				}
 				else
 				{
@@ -269,8 +269,8 @@ void _cpy_st_insert_copies(char *output, char *expr_1, char *op, char *expr_2)
 					strcat(output, cp_st_table[index].expr_2);
 					cp_st_changes_made++;
 
-					printf("REPLACED %s with %s %s %s in %s\n", expr_1, cp_st_table[index].expr_1,
-							cp_st_table[index].op, cp_st_table[index].expr_2, output);
+					// printf("REPLACED %s with %s %s %s in %s\n", expr_1, cp_st_table[index].expr_1,
+							// cp_st_table[index].op, cp_st_table[index].expr_2, output);
 				}
 			}
 		}
@@ -308,8 +308,8 @@ void _cpy_st_ifelse_context_invalidator(char *ifelse_line)
 			if(cp_st_table[i].depth_created_in >= cp_st_ifelse_depth)
 			{
 				cp_st_table[i].valid = 0;
-				printf("Invalidated copy statement for %s since the context it was created in exited at line %d\n",
-					cp_st_table[i].assigned, cp_st_line_num);
+				// printf("Invalidated copy statement for %s since the context it was created in exited at line %d\n",
+					// cp_st_table[i].assigned, cp_st_line_num);
 			}
 		}
 
@@ -343,9 +343,9 @@ void _cpy_st_inval_with_assigned_var(char *assigned)
 		{
 			cp_st_table[i].valid = 0;
 
-			printf("Invalidated copy statement for %s = %s %s %s since %s was assigned value on line %d\n",
-			cp_st_table[i].assigned, cp_st_table[i].expr_1, cp_st_table[i].op,
-			cp_st_table[i].expr_2, assigned, cp_st_line_num);
+			// printf("Invalidated copy statement for %s = %s %s %s since %s was assigned value on line %d\n",
+					// cp_st_table[i].assigned, cp_st_table[i].expr_1, cp_st_table[i].op,
+					// cp_st_table[i].expr_2, assigned, cp_st_line_num);
 		}
 	}
 
@@ -422,11 +422,11 @@ void _cpy_st_process_tac_line(char *tac_line)
 		// DON'T RECORD _c = ... to prevent "infinite stack" with CSE insertions
 		if(assigned[0] == '_' && assigned[1] == 'c')
 		{
-			printf("Not recording line %d because %s = ...\n", cp_st_line_num, assigned);
+			// printf("Not recording line %d because %s = ...\n", cp_st_line_num, assigned);
 		}
 		else if(strcmp(assigned, expr_1) == 0 && op == NULL && expr_2 == NULL)
 		{
-			printf("Not recording line %d because %s = %s (SELF ASSIGN)\n", cp_st_line_num, assigned, expr_1);
+			// printf("Not recording line %d because %s = %s (SELF ASSIGN)\n", cp_st_line_num, assigned, expr_1);
 		}
 		else if(strstr(expr_1, "!") != NULL)
 		{
@@ -500,9 +500,9 @@ void _cp_st_remove_dead_temp(char *opt_tac_name, char *temp_tac_name)
 
 			if(remove_line)
 			{
-				// Remove the line by not printing to the TAC file
+				// Remove the line by NOT printing to the TAC file
 				cp_st_changes_made++;
-				printf("REMOVED dead temp assignment: %s", line);
+				// printf("REMOVED dead temp assignment: %s", line);
 			}
 			else
 			{
@@ -563,7 +563,7 @@ int cp_st_do_optimization(char *opt_tac_name, char *temp_tac_name)
 	// Perform one last optimization: delete dead temps
 	_cp_st_remove_dead_temp(opt_tac_name, temp_tac_name);
 
-	printf("Copy-statement Elim. changes made: %d\n", cp_st_changes_made);
+	// printf("Copy-statement Elim. changes made: %d\n", cp_st_changes_made);
 
 	return cp_st_changes_made;
 }
