@@ -1,10 +1,7 @@
 # Benjamin Steenkamer
 # CPEG 621 Project - Calculator Compiler
-# Heuristic
-#	Make good triple if/else tests
 #
-# Remove printout and stop points; enable DD
-# Check everything up to now
+# Check everything up to now (if else 3s)
 # Start report
 #
 # To create the compiler middle end, type `make`
