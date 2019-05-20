@@ -132,7 +132,7 @@ void gen_tac_assign(char *var, char *expr)
 
 	fprintf(tac_file, "%s = %s;\n", var, expr);
 	// printf("WROTE OUT: %s", tac_buf);
-	
+
 	dd_record_and_process(var, expr, NULL, ifelse_depth, inside_if);
 
 	gen_tac_else(var);
@@ -172,14 +172,14 @@ void gen_tac_if(char *cond_expr)
 	char buf[MAX_USR_VAR_NAME_LEN * 2];
 	sprintf(buf, "if(%s) {\n", cond_expr);
 	fprintf(tac_file, buf);
-	
+
 	dd_record_and_process(NULL, cond_expr, NULL, ifelse_depth, inside_if);
-	
+
 	// Increase if-statement depth after TAC written out
 	ifelse_depth++;
 	inside_if = 1;
 	// printf("Inside IF at depth=%d\n", ifelse_depth);
-	
+
 	if(ifelse_depth > MAX_IFELSE_DEPTH)
 	{
 		char err_buf[128];
@@ -188,7 +188,7 @@ void gen_tac_if(char *cond_expr)
 
 		exit(1);
 	}
-	
+
 	return;
 }
 
@@ -199,12 +199,12 @@ void gen_tac_if(char *cond_expr)
 void gen_tac_else(char *expr)
 {
 	// printf("do_gen_else=%d, ifelse_depth=%d\n", do_gen_else, ifelse_depth);
-	
+
 	for (; do_gen_else > 0; do_gen_else--)
 	{
 		inside_if = 0;
 		// printf("Leaving IF, entering ELSE at depth=%d\n", ifelse_depth);
-		
+
 		if(expr != NULL)
 		{
 			fprintf(tac_file, "} else {\n%s = 0;\n}\n", expr);
@@ -215,10 +215,10 @@ void gen_tac_else(char *expr)
 		{
 			fprintf(tac_file, "} else {\n}\n");
 		}
-		
+
 		// printf("Left ELSE at depth=%d\n", ifelse_depth);
 		ifelse_depth--;
-		
+
 		if(ifelse_depth > 0)
 		{
 			inside_if = 1;
@@ -246,28 +246,28 @@ void copy_to_file(char *dest_name, char *source_name)
 {
 	FILE *source_ptr = fopen(source_name, "r");
 	FILE *dest_ptr = fopen(dest_name, "w");
-	
+
 	if(source_ptr == NULL)
 	{
 		printf("Couldn't open %s for copying to %s\n", source_name, dest_name);
 		exit(1);
 	}
-	
+
 	if(dest_ptr == NULL)
 	{
 		printf("Couldn't create %s\n", dest_name);
 		exit(1);
 	}
-	
+
 	char line[MAX_USR_VAR_NAME_LEN * 4];
 	while(fgets(line, MAX_USR_VAR_NAME_LEN * 4, source_ptr) != NULL)
 	{
 		fprintf(dest_ptr, "%s", line);
 	}
-	
+
 	fclose(source_ptr);
 	fclose(dest_ptr);
-	
+
 	return;
 }
 
@@ -308,26 +308,26 @@ int main(int argc, char *argv[])
 	fclose(tac_file);
 
 	dd_print_out_dependencies();	// Print out data dependencies based on the internal TAC
-	
+
 	// Setup for optimization process
 	// Do the initial copy of the front end TAC to the file for optimizations
 	char *opt_tac_name = "Output/tac-opt.txt";
 	copy_to_file(opt_tac_name, frontend_tac_name);
-	
+
 	char *temp_tac_name = "Output/tac-opt-temp.txt";
 	int cse_changes = 0;
 	int cpt_st_changes = 0;
 	int num_opt_loops = 0;
-	
+
 	// Start the optimization loop
 	do
 	{
 		cse_changes = cse_do_optimization(opt_tac_name, temp_tac_name);
 		cpt_st_changes = cp_st_do_optimization(opt_tac_name, temp_tac_name);
 		num_opt_loops++;
-		
+
 	} while(cse_changes > 0 || cpt_st_changes > 0);
-		
+
 	printf("\nPerformed %d optimization loops\n", num_opt_loops);
 
 	// Generate runnable C code for unoptimized and and optimized, with and

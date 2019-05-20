@@ -390,7 +390,7 @@ void dd_print_out_dependencies()
 	int i;
 	for(i = 0; i < num_stmts; i++)
 	{
-		printf("S%d:\nFlow-Dependence: ", i);
+		printf("S%d:\nFlow-dependence: ", i);
 		if (stmt_dep_array[i].num_flow_deps == 0){
 			printf("None");
 		}

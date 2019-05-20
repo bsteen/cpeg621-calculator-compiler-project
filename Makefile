@@ -1,12 +1,9 @@
 # Benjamin Steenkamer
 # CPEG 621 Project - Calculator Compiler
 #
-# Check everything up to now (if else 3s)
-# Start report
-#
 # To create the compiler middle end, type `make`
 # The binary `calc` will be created in the main folder
-# Then type `./calc Tests/<test_file_name> to run the compiler on an 
+# Then type `./calc Tests/<test_file_name> to run the compiler on an
 # 	input calculator program
 # All output files from the middle end are placed in `Output/`
 
@@ -34,7 +31,6 @@ ccodew: Output/backend.c Output/backend-opt.c Output/backend-timing.c Output/bac
 	gcc -Wall -O0 -o Output/prog-opt Output/backend-opt.c -lm
 	gcc -Wall -O0 -o Output/prog-time Output/backend-timing.c -lm
 	gcc -Wall -O0 -o Output/prog-opt-time Output/backend-opt-timing.c -lm
-	
 
 clean:
 	rm -f calc.tab.* lex.yy.c calc.output calc

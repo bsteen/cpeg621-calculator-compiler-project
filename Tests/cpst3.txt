@@ -1,8 +1,8 @@
-x = a + c
-y = 1 * d
-g = asda - 34
-f = x
-h = y
-j = g
-tt = 88*98
-x = tt ** tt
+x=(y=a-2)?(y)
+z=x*(a-2)
+p =(z)?(q=(y=a+1)?(u=y+9))
+r = y / u + q
+y = 20
+x=x
+t =(a=x)?(q=((a+1)?(x+!1))?(y**3))
+g=q + t

@@ -1,0 +1,8 @@
+x = a + c
+y = 1 * d
+g = asda - 34
+f = x
+h = y
+j = g
+tt = 88*98
+x = tt ** tt
